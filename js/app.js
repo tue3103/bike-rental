@@ -139,19 +139,22 @@ function updateCalculator() {
   const daysVal = document.getElementById('calcDaysVal');
   const rateVal = document.getElementById('calcRateVal');
   const totalVal = document.getElementById('calcTotalVal');
+  const deliveryCheck = document.getElementById('calcDeliveryCheck');
 
   if (!slider) return;
   const days = parseInt(slider.value, 10);
   daysVal.innerText = `${days} ${currentLang === 'en' ? 'days' : 'ngày'}`;
 
   let dailyRate = days > 7 ? 30000 : 50000;
-  let totalCost = days * dailyRate;
+  let bikeTotal = days * dailyRate;
+  let deliveryFee = (deliveryCheck && deliveryCheck.checked) ? 100000 : 0;
+  let totalCost = bikeTotal + deliveryFee;
 
   if (currentLang === 'en') {
-    rateVal.innerText = `${dailyRate.toLocaleString()} VND/day (~$${(dailyRate/25000).toFixed(2)} USD)`;
+    rateVal.innerText = `${dailyRate.toLocaleString()} VND/day (~$${(dailyRate/25000).toFixed(2)} USD)${deliveryFee > 0 ? ' + 100k Delivery' : ''}`;
     totalVal.innerText = `${totalCost.toLocaleString()} VND (~$${(totalCost/25000).toFixed(2)} USD)`;
   } else {
-    rateVal.innerText = `${dailyRate.toLocaleString()} đ/ngày ${days > 7 ? '(Giá ưu đãi tuần)' : ''}`;
+    rateVal.innerText = `${dailyRate.toLocaleString()} đ/ngày ${days > 7 ? '(Giá ưu đãi tuần)' : ''}${deliveryFee > 0 ? ' + 100k Phí ship' : ''}`;
     totalVal.innerText = `${totalCost.toLocaleString()} VNĐ`;
   }
 }
@@ -160,14 +163,16 @@ function handleBookingSubmit(e) {
   e.preventDefault();
   const name = document.getElementById('bookName').value;
   const phone = document.getElementById('bookPhone').value;
+  const deliveryMethod = document.querySelector('input[name="deliveryOption"]:checked')?.value || 'Hotel Delivery';
   const hotel = document.getElementById('bookHotel').value;
-  const days = document.getElementById('bookDays').value;
-  const bikes = document.getElementById('bookBikes').value;
+  const days = parseInt(document.getElementById('bookDays').value, 10) || 1;
+  const bikes = parseInt(document.getElementById('bookBikes').value, 10) || 1;
 
   const rate = days > 7 ? 30000 : 50000;
-  const total = days * rate * bikes;
+  const deliveryFee = deliveryMethod === 'Hotel Delivery' ? 100000 : 0;
+  const total = (days * rate * bikes) + deliveryFee;
 
-  const message = `Hello SmileX Bike Rental!\nI want to book ${bikes} bicycle(s):\n- Name: ${name}\n- Phone/WhatsApp: ${phone}\n- Hotel in Pleiku: ${hotel}\n- Rental Days: ${days} days\n- Total: ${total.toLocaleString()} VND\nPlease confirm my delivery. Thank you!`;
+  const message = `Hello SmileX Bike Rental!\nI want to book ${bikes} bicycle(s):\n- Name: ${name}\n- Phone/WhatsApp: ${phone}\n- Method: ${deliveryMethod}\n- Hotel / Address: ${hotel}\n- Duration: ${days} days\n- Total: ${total.toLocaleString()} VND\nPlease confirm my reservation. Thank you!`;
 
   const whatsappUrl = `https://wa.me/84979820789?text=${encodeURIComponent(message)}`;
   window.open(whatsappUrl, '_blank');
@@ -177,3 +182,4 @@ document.addEventListener('DOMContentLoaded', () => {
   applyLanguage();
   updateCalculator();
 });
+
