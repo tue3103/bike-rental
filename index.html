@@ -242,21 +242,21 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Delivery Method:</label>
-          <div style="display:flex; gap:16px; margin-top:6px;">
+          <label class="form-label">Delivery / Pickup Method:</label>
+          <div style="display:flex; gap:16px; margin-top:6px; flex-wrap:wrap;">
             <label style="display:flex; align-items:center; gap:6px; font-size:14px; cursor:pointer;">
-              <input type="radio" name="deliveryOption" value="Hotel Delivery" checked style="accent-color:var(--primary);">
+              <input type="radio" name="deliveryOption" value="Hotel Delivery" checked style="accent-color:var(--primary);" onchange="document.getElementById('bookHotel').value=''; document.getElementById('bookHotel').placeholder='e.g. Pleiku Hotel, 03 Nguyen Du...';">
               🚚 Hotel Delivery (+100k)
             </label>
             <label style="display:flex; align-items:center; gap:6px; font-size:14px; cursor:pointer;">
-              <input type="radio" name="deliveryOption" value="Self Pickup at Shop" style="accent-color:var(--primary);">
-              🏬 Self Pickup at Shop (0đ)
+              <input type="radio" name="deliveryOption" value="Self Pickup at Shop (197 Nguyen Tat Thanh)" style="accent-color:var(--primary);" onchange="document.getElementById('bookHotel').value='197 Nguyễn Tất Thành, TP. Pleiku';">
+              🏬 Pickup at Store: 197 Nguyễn Tất Thành (Free)
             </label>
           </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label" data-i18n="form_hotel">Your Hotel / Homestay Address in Pleiku:</label>
+          <label class="form-label" data-i18n="form_hotel">Delivery Address / Hotel in Pleiku:</label>
           <input type="text" id="bookHotel" class="form-input" placeholder="e.g. Pleiku Hotel, 03 Nguyen Du..." required>
         </div>
 
@@ -307,7 +307,8 @@
   <footer class="footer">
     <div class="container">
       <div style="font-family:var(--font-heading); font-size:20px; font-weight:800; margin-bottom:8px;">SmileX Bike Rental Pleiku</div>
-      <p class="footer-text">📍 Central Pleiku, Gia Lai Province, Vietnam • 📞 Hotline/WhatsApp: +84 979 820 789</p>
+      <p class="footer-text">📍 <b>Store & Pickup Location:</b> 197 Nguyễn Tất Thành, TP. Pleiku, Gia Lai</p>
+      <p class="footer-text" style="margin-top:6px;">📞 Hotline / WhatsApp: <b>+84 979 820 789</b></p>
       <p class="footer-text" style="margin-top:10px; opacity:0.6;">© 2026 SmileX Bike. All rights reserved.</p>
     </div>
   </footer>
