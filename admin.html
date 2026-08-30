@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - SmileX Bike Rental Pleiku</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+  <!-- ADMIN HEADER -->
+  <header class="admin-header">
+    <div class="admin-title">
+      <span>🚴</span>
+      <span>SmileX Bike Admin</span>
+      <span style="font-size:11px; background:rgba(16,185,129,0.2); color:#10b981; padding:2px 8px; border-radius:99px;">197 Nguyễn Tất Thành</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <a href="https://t.me/c/4298681574" target="_blank" class="btn-action" style="background:#0088cc; border:none; display:flex; align-items:center; gap:6px;">
+        <span>💬</span> Mở Telegram Group Topics
+      </a>
+      <a href="/" target="_blank" class="btn-action">🌐 Xem Website</a>
+    </div>
+  </header>
+
+  <div style="max-width:1200px; margin:0 auto; padding:0 20px;">
+
+    <!-- STATS GRID -->
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-val" id="statTotalBikes">15</div>
+        <div class="stat-label">Tổng Xe Trong Kho</div>
+        <div style="display:flex; justify-content:center; gap:8px; margin-top:8px;">
+          <button class="btn-action" onclick="updateBikeCount(1)">+ Thêm xe</button>
+          <button class="btn-action" onclick="updateBikeCount(-1)">- Bớt xe</button>
+        </div>
+      </div>
+
+      <div class="stat-box featured">
+        <div class="stat-val" id="statAvailableBikes" style="color:var(--primary);">13</div>
+        <div class="stat-label">Xe Sẵn Sàng Cho Thuê</div>
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-val" id="statRentedBikes" style="color:#ef4444;">2</div>
+        <div class="stat-label">Xe Đang Cho Khách Thuê</div>
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-val" id="statTotalDeposit" style="color:var(--accent-gold); font-size:26px;">15.000.000 đ</div>
+        <div class="stat-label">Tổng Tiền Cọc Đang Giữ</div>
+      </div>
+    </div>
+
+    <!-- AI AUTO-PILOT SETTINGS -->
+    <div class="card-panel">
+      <div class="panel-header">
+        <div class="panel-title">🤖 Trợ Lý AI Tự Động Phản Hồi (AI Auto-Pilot)</div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="aiAutoPilotToggle" class="switch-input" onchange="toggleAiAutoPilot()" checked>
+          <span style="font-weight:700; font-size:14px;">Bật AI tự động trả lời khách 24/7</span>
+        </label>
+      </div>
+      <p style="font-size:13px; color:var(--text-muted); line-height:1.5;">
+        Khi bật, AI sẽ tự động đọc số lượng xe sẵn sàng trong kho, mức giá (50k/ngày, 30k/tuần, cọc 5tr không giữ passport, ship 100k) và tư vấn bằng đúng ngôn ngữ của khách. Tất cả tin nhắn đều được đồng bộ thời gian thực vào Telegram Group Topics.
+      </p>
+    </div>
+
+    <!-- ORDERS TABLE -->
+    <div class="card-panel">
+      <div class="panel-header">
+        <div class="panel-title">📋 Danh Sách Đơn Đặt Xe & Thuê Xe</div>
+        <button class="btn-action" onclick="fetchAdminData()">🔄 Làm mới</button>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table class="orders-table">
+          <thead>
+            <tr>
+              <th>Mã Đơn / Ngày</th>
+              <th>Khách Hàng</th>
+              <th>Số Xe & Ngày</th>
+              <th>Tổng Tiền</th>
+              <th>Tiền Cọc (5Tr)</th>
+              <th>Trạng Thái</th>
+              <th>Thao Tác</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTbody">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/js/admin.js"></script>
+</body>
+</html>

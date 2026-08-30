@@ -20,6 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/chat.css">
 </head>
 <body>
 
@@ -313,19 +314,38 @@
     </div>
   </footer>
 
-  <!-- FLOATING QUICK CONTACT BAR -->
-  <div class="floating-bar">
-    <a href="https://wa.me/84979820789" class="float-btn whatsapp" target="_blank">
-      <span>💬</span> WhatsApp
-    </a>
-    <a href="https://zalo.me/0979820789" class="float-btn zalo" target="_blank">
-      <span>💬</span> Zalo
-    </a>
-    <a href="tel:0979820789" class="float-btn call">
-      <span>📞</span> Call: 0979.820.789
-    </a>
+  <!-- LIVE CHAT WIDGET (2-WAY TELEGRAM SYNC & AI ASSISTANT) -->
+  <button class="chat-launcher-btn" id="chatLauncher" onclick="toggleChat()" title="Live Chat with SmileX Bike">
+    <span>💬</span>
+    <span class="chat-badge-pulse"></span>
+  </button>
+
+  <div class="chat-window" id="chatWindow">
+    <div class="chat-header">
+      <div class="chat-header-info">
+        <div class="chat-avatar">🚴</div>
+        <div>
+          <div class="chat-header-title">SmileX Bike Support</div>
+          <div class="chat-header-status">
+            <span class="status-dot"></span>
+            <span>Online • AI & Telegram Sync</span>
+          </div>
+        </div>
+      </div>
+      <button class="chat-close-btn" onclick="toggleChat()">✕</button>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <!-- Rendered by chat.js -->
+    </div>
+
+    <form class="chat-input-area" onsubmit="sendChatMessage(event)">
+      <input type="text" id="chatInput" class="chat-input" placeholder="Type your message / question..." required>
+      <button type="submit" class="chat-send-btn">➤</button>
+    </form>
   </div>
 
   <script src="/js/app.js"></script>
+  <script src="/js/chat.js"></script>
 </body>
 </html>
