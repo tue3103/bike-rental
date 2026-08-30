@@ -27,7 +27,7 @@ const i18n = {
     sec_inclusions_tag: "ALL-INCLUSIVE SERVICE",
     sec_inclusions_title: "What's Included For Free",
     inc_delivery_title: "Hotel / Homestay Delivery",
-    inc_delivery_desc: "Free drop-off & pick-up at your accommodation in Pleiku City center.",
+    inc_delivery_desc: "Door-to-door drop-off & pick-up at your hotel in Pleiku (100,000 VND / ~$4 USD round-trip).",
     inc_helmet_title: "Sport Helmet & Lock",
     inc_helmet_desc: "High quality adjustable helmet and anti-theft cable lock.",
     inc_mount_title: "Phone Mount & Kit",
@@ -56,7 +56,7 @@ const i18n = {
     faq_q2: "What payment methods do you accept?",
     faq_a2: "We accept Cash (VND / USD / EUR), International Bank Transfer (Wise, Revolut), Vietnamese Bank QR transfer, and Crypto (USDT).",
     faq_q3: "Do you deliver the bike to my hotel?",
-    faq_a3: "Yes! We provide free delivery and collection directly at your hotel, hostel, or homestay in Pleiku city center."
+    faq_a3: "Yes! We provide convenient door-to-door delivery & return collection directly at your hotel, hostel, or homestay in Pleiku city center for a flat round-trip fee of 100,000 VND (~$4 USD)."
   },
   vi: {
     lang_btn: "🇬🇧 English",
@@ -79,9 +79,9 @@ const i18n = {
     price_deposit_unit: "VNĐ (Hoàn trả 100%)",
     price_deposit_usd: "✨ Không giữ Passport/CCCD • Bàn giao 5 phút",
     sec_inclusions_tag: "DỊCH VỤ TRỌN GÓI",
-    sec_inclusions_title: "Ưu Đãi Miễn Phí Đi Kèm",
+    sec_inclusions_title: "Ưu Đãi Đi Kèm",
     inc_delivery_title: "Giao Xe Tận Khách Sạn",
-    inc_delivery_desc: "Giao nhận xe miễn phí tận nơi tại Khách sạn / Homestay trung tâm TP. Pleiku.",
+    inc_delivery_desc: "Giao và nhận xe tận nơi tại Khách sạn / Homestay trung tâm Pleiku (Phí ship khứ hồi 100.000đ).",
     inc_helmet_title: "Mũ Bảo Hiểm & Khóa Dây",
     inc_helmet_desc: "Trang bị đầy đủ mũ bảo hiểm thể thao an toàn và khóa số chống trộm.",
     inc_mount_title: "Giá Đỡ Điện Thoại & Đồ Nghề",
@@ -110,7 +110,7 @@ const i18n = {
     faq_q2: "Chấp nhận các hình thức thanh toán nào?",
     faq_a2: "Chúng tôi nhận tiền mặt (VND / USD), Chuyển khoản ngân hàng QR, Wise, Revolut, thẻ Quốc tế và Crypto (USDT).",
     faq_q3: "Có giao xe tận nơi ở Pleiku không?",
-    faq_a3: "Có! Chúng tôi giao và nhận xe hoàn toàn miễn phí tại tất cả các khách sạn, homestay trong trung tâm thành phố Pleiku."
+    faq_a3: "Có! Chúng tôi hỗ trợ giao xe và đến thu hồi xe tận nơi tại khách sạn, homestay trong TP. Pleiku với phí ship khứ hồi trọn gói là 100.000 VNĐ."
   }
 };
 
