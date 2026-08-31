@@ -52,6 +52,36 @@ global._orders = global._orders || [
   }
 ];
 
+const REMOTE_STORE_ID = 'ff808181a057a55b01a057d33ec00091';
+
+async function getSharedChatStore() {
+  try {
+    const res = await fetch(`https://api.restful-api.dev/objects/${REMOTE_STORE_ID}`);
+    if (res.ok) {
+      const data = await res.json();
+      return data.data || {};
+    }
+  } catch (e) {
+    console.error('Fetch shared store error:', e);
+  }
+  return {};
+}
+
+async function updateSharedChatStore(data) {
+  try {
+    await fetch(`https://api.restful-api.dev/objects/${REMOTE_STORE_ID}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'smilex_bike_chat_sync',
+        data: data
+      })
+    });
+  } catch (e) {
+    console.error('Update shared store error:', e);
+  }
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -62,6 +92,8 @@ export default async function handler(req, res) {
   const action = req.query.action || (req.body && req.body.action) || 'send';
 
   try {
+    const store = await getSharedChatStore();
+
     // ------------------------------------------------------------------------
     // ACTION: SEND MESSAGE (From Web Client)
     // ------------------------------------------------------------------------
@@ -71,18 +103,14 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Missing sessionId or message' });
       }
 
-      let session = global._sessionStore.get(sessionId);
-      if (!session) {
-        session = {
-          sessionId,
-          name: name || 'Traveler #' + sessionId.slice(-4),
-          phone: phone || '',
-          hotel: hotel || '',
-          topicId: null,
-          messages: []
-        };
-        global._sessionStore.set(sessionId, session);
-      }
+      let session = store[sessionId] || {
+        sessionId,
+        name: name || 'Traveler #' + sessionId.slice(-4),
+        phone: phone || '',
+        hotel: hotel || '',
+        topicId: null,
+        messages: []
+      };
 
       // Add user message
       const userMsg = {
@@ -106,7 +134,6 @@ export default async function handler(req, res) {
           const topicData = await topicRes.json();
           if (topicData.ok) {
             session.topicId = topicData.result.message_thread_id;
-            global._topicToSession.set(String(session.topicId), sessionId);
 
             // Send introductory card to Telegram Topic
             await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
@@ -162,7 +189,7 @@ export default async function handler(req, res) {
               body: JSON.stringify({
                 chat_id: TELEGRAM_GROUP_ID,
                 message_thread_id: session.topicId,
-                text: `🤖 <b>[AI Phản Hồi]:</b>\n${aiReplyText}`,
+                text: `🤖 <b>[SmileX AI]:</b>\n${aiReplyText}`,
                 parse_mode: 'HTML'
               })
             });
@@ -170,8 +197,12 @@ export default async function handler(req, res) {
         }
       }
 
+      store[sessionId] = session;
+      await updateSharedChatStore(store);
+
       return res.status(200).json({
         success: true,
+        session,
         messages: session.messages
       });
     }
@@ -187,31 +218,25 @@ export default async function handler(req, res) {
         const fromBot = msg.from?.is_bot;
 
         if (!fromBot && threadId) {
-          let sessionId = global._topicToSession.get(String(threadId));
-          
-          // Fallback search across all sessions
-          if (!sessionId) {
-            for (const [sId, sess] of global._sessionStore.entries()) {
-              if (sess.topicId === threadId) {
-                sessionId = sId;
-                global._topicToSession.set(String(threadId), sId);
-                break;
-              }
+          // Find matching session by topicId
+          let targetSessionId = null;
+          for (const [sId, sess] of Object.entries(store)) {
+            if (sess && sess.topicId === threadId) {
+              targetSessionId = sId;
+              break;
             }
           }
 
-          if (sessionId) {
-            const session = global._sessionStore.get(sessionId);
-            if (session) {
-              const adminMsg = {
-                sender: 'admin',
-                text: text,
-                author: msg.from?.first_name || 'Admin',
-                time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-              };
-              session.messages.push(adminMsg);
-              console.log(`[Admin -> Web Guest ${sessionId}]:`, text);
-            }
+          if (targetSessionId && store[targetSessionId]) {
+            const adminMsg = {
+              sender: 'admin',
+              text: text,
+              author: msg.from?.first_name || 'Admin',
+              time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+            };
+            store[targetSessionId].messages.push(adminMsg);
+            await updateSharedChatStore(store);
+            console.log(`[Admin -> Web Guest ${targetSessionId}]:`, text);
           }
         }
       }
@@ -223,7 +248,7 @@ export default async function handler(req, res) {
     // ------------------------------------------------------------------------
     if (action === 'poll' || action === 'get') {
       const sessionId = req.query.sessionId;
-      const session = global._sessionStore.get(sessionId);
+      const session = store[sessionId];
       return res.status(200).json({
         success: true,
         messages: session ? session.messages : []
