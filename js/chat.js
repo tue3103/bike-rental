@@ -25,6 +25,17 @@ try {
 let isChatOpen = false;
 let chatPollTimer = null;
 
+function resetChat() {
+  localStorage.removeItem(CHAT_SESSION_KEY);
+  localStorage.removeItem(CHAT_HISTORY_KEY);
+  localStorage.removeItem(CHAT_TOPIC_KEY);
+  chatSessionId = 'vis_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+  localStorage.setItem(CHAT_SESSION_KEY, chatSessionId);
+  chatTopicId = null;
+  localMessages = [];
+  renderChatMessages();
+}
+
 function toggleChat() {
   isChatOpen = !isChatOpen;
   const win = document.getElementById('chatWindow');

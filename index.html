@@ -332,7 +332,10 @@
           </div>
         </div>
       </div>
-      <button class="chat-close-btn" onclick="toggleChat()">✕</button>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <button class="chat-close-btn" onclick="resetChat()" title="Làm mới / Bắt đầu phiên chat mới" style="font-size:14px;">🔄</button>
+        <button class="chat-close-btn" onclick="toggleChat()" title="Đóng khung chat">✕</button>
+      </div>
     </div>
 
     <div class="chat-messages" id="chatMessages">
