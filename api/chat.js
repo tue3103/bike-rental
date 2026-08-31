@@ -244,26 +244,35 @@ export default async function handler(req, res) {
         const fromBot = msg.from?.is_bot;
 
         if (!fromBot && threadId) {
-          // Find matching session by topicId
-          let targetSessionId = null;
+          const adminMsg = {
+            sender: 'admin',
+            text: text,
+            author: msg.from?.first_name || 'Admin',
+            time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+          };
+
+          // 1. Store in direct topic queue
+          const topicKey = 'topic_' + String(threadId);
+          store[topicKey] = store[topicKey] || [];
+          store[topicKey].push(adminMsg);
+
+          // 2. Also append directly to matching session in store & memory
           for (const [sId, sess] of Object.entries(store)) {
-            if (sess && sess.topicId === threadId) {
-              targetSessionId = sId;
-              break;
+            if (sess && String(sess.topicId) === String(threadId)) {
+              sess.messages = sess.messages || [];
+              sess.messages.push(adminMsg);
+            }
+          }
+          for (const [sId, sess] of global._sessionStore.entries()) {
+            if (sess && String(sess.topicId) === String(threadId)) {
+              sess.messages = sess.messages || [];
+              sess.messages.push(adminMsg);
             }
           }
 
-          if (targetSessionId && store[targetSessionId]) {
-            const adminMsg = {
-              sender: 'admin',
-              text: text,
-              author: msg.from?.first_name || 'Admin',
-              time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-            };
-            store[targetSessionId].messages.push(adminMsg);
-            await updateSharedChatStore(store);
-            console.log(`[Admin -> Web Guest ${targetSessionId}]:`, text);
-          }
+          // 3. Persist to shared store
+          await updateSharedChatStore(store);
+          console.log(`[Admin -> Topic ${threadId}]:`, text);
         }
       }
       return res.status(200).json({ ok: true });
@@ -274,11 +283,26 @@ export default async function handler(req, res) {
     // ------------------------------------------------------------------------
     if (action === 'poll' || action === 'get') {
       const sessionId = req.query.sessionId;
-      const session = store[sessionId];
+      const topicId = req.query.topicId;
+      const session = store[sessionId] || global._sessionStore.get(sessionId);
+
+      let messages = session ? [...(session.messages || [])] : [];
+
+      // Check topic message queue
+      const activeTopicId = topicId || (session ? session.topicId : null);
+      if (activeTopicId) {
+        const topicQueue = store['topic_' + String(activeTopicId)] || [];
+        topicQueue.forEach(adminMsg => {
+          if (!messages.some(m => m.text === adminMsg.text && m.sender === 'admin')) {
+            messages.push(adminMsg);
+          }
+        });
+      }
+
       return res.status(200).json({
         success: true,
-        topicId: session ? session.topicId : null,
-        messages: session ? session.messages : []
+        topicId: activeTopicId ? parseInt(activeTopicId, 10) : null,
+        messages: messages
       });
     }
 

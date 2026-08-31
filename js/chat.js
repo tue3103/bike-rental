@@ -138,7 +138,7 @@ async function sendChatMessage(e) {
 
 async function pollNewMessages() {
   try {
-    const res = await fetch(`/api/chat?action=poll&sessionId=${chatSessionId}`);
+    const res = await fetch(`/api/chat?action=poll&sessionId=${chatSessionId}&topicId=${chatTopicId || ''}`);
     const data = await res.json();
     if (data.success) {
       if (data.topicId && !chatTopicId) {
