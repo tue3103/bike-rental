@@ -159,12 +159,28 @@ function updateCalculator() {
   }
 }
 
+function onDeliveryOptionChange(val) {
+  const hotelInput = document.getElementById('bookHotel');
+  const hotelGroup = document.getElementById('hotelAddressGroup');
+  if (!hotelInput) return;
+
+  if (val === 'Self Pickup') {
+    hotelInput.value = '197 Nguyễn Tất Thành, TP. Pleiku (Nhận tại cửa hàng)';
+    hotelInput.disabled = true;
+  } else {
+    hotelInput.value = '';
+    hotelInput.disabled = false;
+    hotelInput.placeholder = 'Ví dụ: Pleiku Hotel, 03 Nguyễn Du...';
+  }
+}
+
 function handleBookingSubmit(e) {
   e.preventDefault();
-  const name = document.getElementById('bookName').value;
-  const phone = document.getElementById('bookPhone').value;
-  const deliveryMethod = document.querySelector('input[name="deliveryOption"]:checked')?.value || 'Hotel Delivery';
-  const hotel = document.getElementById('bookHotel').value;
+  const name = document.getElementById('bookName').value.trim();
+  const phone = document.getElementById('bookPhone').value.trim();
+  const bikeType = document.getElementById('bookBikeType').value;
+  const deliveryMethod = document.getElementById('bookDeliverySelect').value;
+  const hotel = document.getElementById('bookHotel').value.trim();
   const days = parseInt(document.getElementById('bookDays').value, 10) || 1;
   const bikes = parseInt(document.getElementById('bookBikes').value, 10) || 1;
 
@@ -172,10 +188,24 @@ function handleBookingSubmit(e) {
   const deliveryFee = deliveryMethod === 'Hotel Delivery' ? 100000 : 0;
   const total = (days * rate * bikes) + deliveryFee;
 
-  const message = `Hello SmileX Bike Rental!\nI want to book ${bikes} bicycle(s):\n- Name: ${name}\n- Phone/WhatsApp: ${phone}\n- Method: ${deliveryMethod}\n- Hotel / Address: ${hotel}\n- Duration: ${days} days\n- Total: ${total.toLocaleString()} VND\nPlease confirm my reservation. Thank you!`;
+  // Save guest name for chat
+  localStorage.setItem('smilex_guest_name', name);
+  localStorage.setItem('smilex_guest_phone', phone);
 
-  const whatsappUrl = `https://wa.me/84979820789?text=${encodeURIComponent(message)}`;
-  window.open(whatsappUrl, '_blank');
+  const isVi = (window.currentLang || 'vi') === 'vi';
+  const deliveryText = deliveryMethod === 'Hotel Delivery' 
+    ? (isVi ? `Giao tận khách sạn (+100k): ${hotel}` : `Hotel Delivery (+100k): ${hotel}`)
+    : (isVi ? 'Nhận trực tiếp tại shop (197 Nguyễn Tất Thành)' : 'Pickup at store (197 Nguyen Tat Thanh)');
+
+  const promptMessage = isVi
+    ? `📋 [YÊU CẦU ĐẶT THUÊ XE]\n• Khách hàng: ${name}\n• Số điện thoại: ${phone}\n• Dòng xe: ${bikeType}\n• Số lượng: ${bikes} xe\n• Thời gian thuê: ${days} ngày\n• Nơi nhận: ${deliveryText}\n• Tổng tiền dự tính: ${total.toLocaleString()} đ (+ Cọc 5tr hoàn 100% khi trả xe).\n👉 Nhờ Lễ Tân SmileX kiểm tra xe & xác nhận đơn giúp mình nhé!`
+    : `📋 [BIKE RENTAL RESERVATION]\n• Guest Name: ${name}\n• WhatsApp/Phone: ${phone}\n• Bike Choice: ${bikeType}\n• Quantity: ${bikes} bike(s)\n• Duration: ${days} day(s)\n• Location: ${deliveryText}\n• Estimated Total: ${total.toLocaleString()} VND (+ 5M refundable deposit).\n👉 Please confirm my reservation and arrange delivery. Thank you!`;
+
+  if (typeof quickBookPrompt === 'function') {
+    quickBookPrompt(promptMessage);
+  } else if (typeof toggleChat === 'function') {
+    toggleChat();
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
