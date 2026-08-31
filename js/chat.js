@@ -11,6 +11,9 @@ if (!chatSessionId) {
   localStorage.setItem(CHAT_SESSION_KEY, chatSessionId);
 }
 
+const CHAT_TOPIC_KEY = 'smilex_bike_chat_topic_v1';
+let chatTopicId = localStorage.getItem(CHAT_TOPIC_KEY);
+
 let localMessages = [];
 try {
   const saved = localStorage.getItem(CHAT_HISTORY_KEY);
@@ -87,15 +90,22 @@ async function sendChatMessage(e) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         sessionId: chatSessionId,
+        topicId: chatTopicId || null,
         message: text,
         name: localStorage.getItem('smilex_guest_name') || ''
       })
     });
     const data = await res.json();
-    if (data.success && data.messages) {
-      localMessages = data.messages;
-      saveLocalHistory();
-      renderChatMessages();
+    if (data.success) {
+      if (data.session?.topicId || data.topicId) {
+        chatTopicId = data.session?.topicId || data.topicId;
+        localStorage.setItem(CHAT_TOPIC_KEY, String(chatTopicId));
+      }
+      if (data.messages) {
+        localMessages = data.messages;
+        saveLocalHistory();
+        renderChatMessages();
+      }
     }
   } catch (err) {
     console.error('Send error:', err);
@@ -106,15 +116,21 @@ async function pollNewMessages() {
   try {
     const res = await fetch(`/api/chat?action=poll&sessionId=${chatSessionId}`);
     const data = await res.json();
-    if (data.success && data.messages && data.messages.length > localMessages.length) {
-      localMessages = data.messages;
-      saveLocalHistory();
-      renderChatMessages();
+    if (data.success) {
+      if (data.topicId && !chatTopicId) {
+        chatTopicId = data.topicId;
+        localStorage.setItem(CHAT_TOPIC_KEY, String(chatTopicId));
+      }
+      if (data.messages && data.messages.length > localMessages.length) {
+        localMessages = data.messages;
+        saveLocalHistory();
+        renderChatMessages();
 
-      // Show notification on chat badge if closed
-      const badge = document.getElementById('chatUnreadBadge');
-      if (badge && !isChatOpen) {
-        badge.style.display = 'flex';
+        // Show notification on chat badge if closed
+        const badge = document.getElementById('chatUnreadBadge');
+        if (badge && !isChatOpen) {
+          badge.style.display = 'flex';
+        }
       }
     }
   } catch (e) {}

@@ -98,7 +98,7 @@ export default async function handler(req, res) {
     // ACTION: SEND MESSAGE (From Web Client)
     // ------------------------------------------------------------------------
     if (action === 'send' && req.method === 'POST') {
-      const { sessionId, message, name, phone, hotel } = req.body;
+      const { sessionId, topicId: clientTopicId, message, name, phone, hotel } = req.body;
       if (!sessionId || !message) {
         return res.status(400).json({ error: 'Missing sessionId or message' });
       }
@@ -112,6 +112,14 @@ export default async function handler(req, res) {
         messages: []
       };
 
+      // Check if client or memory already has topicId
+      if (!session.topicId && clientTopicId) {
+        session.topicId = parseInt(clientTopicId, 10);
+      }
+      if (!session.topicId && global._sessionStore.has(sessionId)) {
+        session.topicId = global._sessionStore.get(sessionId)?.topicId || null;
+      }
+
       // Add user message
       const userMsg = {
         sender: 'user',
@@ -120,7 +128,7 @@ export default async function handler(req, res) {
       };
       session.messages.push(userMsg);
 
-      // Create Telegram Topic if not already created
+      // Create Telegram Topic ONLY IF NOT YET CREATED
       if (!session.topicId) {
         try {
           const topicRes = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/createForumTopic`, {
@@ -151,6 +159,9 @@ export default async function handler(req, res) {
           console.error('Create topic error:', err);
         }
       }
+
+      // Keep memory cache updated
+      global._sessionStore.set(sessionId, session);
 
       // Send User's Message into Telegram Topic
       if (session.topicId) {
@@ -251,6 +262,7 @@ export default async function handler(req, res) {
       const session = store[sessionId];
       return res.status(200).json({
         success: true,
+        topicId: session ? session.topicId : null,
         messages: session ? session.messages : []
       });
     }
