@@ -64,6 +64,7 @@ async function loadDashboardData() {
       currentFleet = data.fleet || [];
       currentOrders = data.orders || [];
       renderStats(data.stats, data.settings);
+      renderPaymentSettings(data.settings);
       renderFleet(currentFleet);
       renderOrders(currentOrders);
       populateBikeSelectOptions();
@@ -615,7 +616,86 @@ async function completeOrder(orderId) {
   }
 }
 
-// 5. AI SETTINGS
+// 5. PAYMENT & STORE SETTINGS
+function renderPaymentSettings(settings) {
+  if (!settings) return;
+  const bankSelect = document.getElementById('settingBankSelect');
+  const accNo = document.getElementById('settingAccountNo');
+  const accName = document.getElementById('settingAccountName');
+  const intl = document.getElementById('settingIntlPayment');
+  const policy = document.getElementById('settingPaymentPolicy');
+
+  if (bankSelect && settings.bankName) {
+    for (let opt of bankSelect.options) {
+      if (opt.value.includes(settings.bankName) || opt.text.includes(settings.bankName)) {
+        opt.selected = true;
+        break;
+      }
+    }
+  }
+  if (accNo && settings.accountNo) accNo.value = settings.accountNo;
+  if (accName && settings.accountName) accName.value = settings.accountName;
+  if (intl && settings.intlPaymentInfo) intl.value = settings.intlPaymentInfo;
+  if (policy && settings.advancePaymentPolicy) policy.value = settings.advancePaymentPolicy;
+
+  updateQrPreview();
+}
+
+function updateQrPreview() {
+  const bankVal = document.getElementById('settingBankSelect')?.value || 'MBBank|970422';
+  const [bankName, bankBin] = bankVal.split('|');
+  const accNo = document.getElementById('settingAccountNo')?.value.trim();
+  const accName = document.getElementById('settingAccountName')?.value.trim();
+
+  const img = document.getElementById('qrPreviewImg');
+  const title = document.getElementById('qrPreviewTitle');
+  const desc = document.getElementById('qrPreviewDesc');
+
+  if (accNo && accName && img) {
+    const qrUrl = `https://img.vietqr.io/image/${bankBin}-${accNo}-compact2.png?amount=200000&addInfo=ORD-DEMO&accountName=${encodeURIComponent(accName)}`;
+    img.src = qrUrl;
+    img.style.display = 'block';
+    if (title) title.innerText = `Mã VietQR: ${bankName} • ${accNo}`;
+    if (desc) desc.innerText = `Chủ TK: ${accName}. Khi khách đặt đơn, hệ thống tự động chèn số tiền và mã đơn của khách vào mã QR này.`;
+  }
+}
+
+async function handleSavePaymentSettings(e) {
+  if (e) e.preventDefault();
+  const bankVal = document.getElementById('settingBankSelect')?.value || 'MBBank|970422';
+  const [bankName, bankBin] = bankVal.split('|');
+  const accountNo = document.getElementById('settingAccountNo')?.value.trim();
+  const accountName = document.getElementById('settingAccountName')?.value.trim();
+  const intlPaymentInfo = document.getElementById('settingIntlPayment')?.value.trim();
+  const advancePaymentPolicy = document.getElementById('settingPaymentPolicy')?.value.trim();
+
+  try {
+    const res = await fetch('/api/inventory?action=saveSettings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        bankName,
+        bankBin,
+        accountNo,
+        accountName,
+        intlPaymentInfo,
+        advancePaymentPolicy
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert('✅ Đã lưu cấu hình thanh toán & ngân hàng thành công vào Cloudflare D1!');
+      loadDashboardData();
+    } else {
+      alert('Lỗi: ' + (data.error || 'Không thể lưu cài đặt'));
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Lỗi kết nối khi lưu cài đặt');
+  }
+}
+
+// 6. AI SETTINGS
 async function toggleAiAutoPilot() {
   const check = document.getElementById('aiAutoPilotToggle').checked;
   try {

@@ -461,6 +461,15 @@ const CF_D1_DB_ID = process.env.CLOUDFLARE_D1_DB_ID || '1347e92e-d0ed-4820-bf66-
 
 async function generateAiResponse(userMessage, session, inventory) {
   let fleet = global._bikeFleet || [];
+  let settings = {
+    bankName: "MBBank",
+    bankBin: "970422",
+    accountNo: "0773486199",
+    accountName: "NGUYEN DUC TUE",
+    advancePaymentPolicy: "Đối với đơn giao tận khách sạn, quý khách vui lòng chuyển khoản trước tiền thuê & phí ship để SmileX điều phối xe đến đúng giờ.",
+    intlPaymentInfo: "Wise, Revolut, Cash USD/EUR, Crypto accepted"
+  };
+
   try {
     const cfRes = await fetch(`https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/d1/database/${CF_D1_DB_ID}/query`, {
       method: 'POST',
@@ -468,7 +477,7 @@ async function generateAiResponse(userMessage, session, inventory) {
         'Authorization': `Bearer ${CF_D1_TOKEN}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ sql: 'SELECT * FROM bikes ORDER BY id ASC;' })
+      body: JSON.stringify({ sql: 'SELECT * FROM bikes ORDER BY id ASC; SELECT * FROM store_settings;' })
     });
     const cfData = await cfRes.json();
     if (cfData.success && cfData.result?.[0]?.results?.length > 0) {
@@ -482,6 +491,11 @@ async function generateAiResponse(userMessage, session, inventory) {
         status: r.status,
         gear: r.gear || ''
       }));
+    }
+    if (cfData.success && cfData.result?.[1]?.results?.length > 0) {
+      for (const row of cfData.result[1].results) {
+        try { settings[row.key] = JSON.parse(row.value); } catch (e) { settings[row.key] = row.value; }
+      }
     }
   } catch (e) {}
 
@@ -537,10 +551,12 @@ Key Store Highlights:
 - Deposit: 5,000,000 VND (100% refunded when returned). NO PASSPORT OR ID HELD!
 - Free Accessories: Helmet, cable lock, phone mount, mini pump included.
 - Fast Delivery: 100,000 VND round-trip to any hotel in Pleiku, or free pickup at 197 Nguyễn Tất Thành.
+- Payment & Banking: ${settings.bankName} Account: ${settings.accountNo} (Name: ${settings.accountName}). ${settings.intlPaymentInfo || ''}.
+- Payment Policy: ${settings.advancePaymentPolicy || 'For hotel delivery, please transfer the rental fee + 100k delivery in advance.'}
 
 Rules:
 1. Always reply in the EXACT SAME LANGUAGE the customer speaks.
-2. If customer asks to rent or says "i want one", enthusiastically confirm we have bikes ready, recommend popular models like Trek Marlin 5 / Giant ATX, and ask when they would like pickup or delivery to their hotel.
+2. If customer asks to rent or submits a booking request, warmly acknowledge their details, confirm our team will prepare the bike, and inform them of the payment instruction (${settings.advancePaymentPolicy || 'Pay in advance for hotel delivery'}).
 3. Keep replies natural, concise (2-3 sentences), warm, welcoming, and helpful as a dedicated shop staff.`
             },
             { role: 'user', content: userMessage }

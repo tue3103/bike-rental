@@ -34,8 +34,32 @@ global._orders = global._orders || [];
 global._storeSettings = global._storeSettings || {
   pickupAddress: "197 Nguyễn Tất Thành, TP. Pleiku, Gia Lai",
   hotline: "0773.486.199",
+  bankName: "MBBank",
+  bankBin: "970422",
+  accountNo: "0773486199",
+  accountName: "NGUYEN DUC TUE",
+  intlPaymentInfo: "Wise / Revolut: Accepted • Cash USD / EUR accepted",
+  advancePaymentPolicy: "Đối với đơn giao tận khách sạn, quý khách vui lòng chuyển khoản trước tiền thuê & phí ship để SmileX điều phối xe đến đúng giờ.",
   aiAutoPilot: true
 };
+
+async function getStoreSettings() {
+  try {
+    const rows = await queryD1('SELECT * FROM store_settings;');
+    if (Array.isArray(rows) && rows.length > 0) {
+      const obj = { ...global._storeSettings };
+      for (const r of rows) {
+        try {
+          obj[r.key] = JSON.parse(r.value);
+        } catch (e) {
+          obj[r.key] = r.value;
+        }
+      }
+      global._storeSettings = obj;
+    }
+  } catch (e) {}
+  return global._storeSettings;
+}
 
 function mapBike(row) {
   let images = [];
@@ -151,7 +175,7 @@ export default async function handler(req, res) {
         },
         fleet,
         orders,
-        settings: global._storeSettings
+        settings: await getStoreSettings()
       });
     }
 
@@ -307,8 +331,31 @@ export default async function handler(req, res) {
     // 9. TOGGLE AI AUTO-PILOT
     if (action === 'toggleAi' && req.method === 'POST') {
       const { aiAutoPilot } = req.body;
-      global._storeSettings.aiAutoPilot = !!aiAutoPilot;
-      return res.status(200).json({ success: true, settings: global._storeSettings });
+      const settings = await getStoreSettings();
+      settings.aiAutoPilot = !!aiAutoPilot;
+      await queryD1('INSERT OR REPLACE INTO store_settings (key, value) VALUES (?, ?);', ['aiAutoPilot', JSON.stringify(settings.aiAutoPilot)]);
+      return res.status(200).json({ success: true, settings });
+    }
+
+    // 10. SAVE PAYMENT & STORE SETTINGS
+    if (action === 'saveSettings' && req.method === 'POST') {
+      const { bankName, bankBin, accountNo, accountName, intlPaymentInfo, advancePaymentPolicy, hotline, pickupAddress } = req.body;
+      const settings = await getStoreSettings();
+
+      if (bankName !== undefined) settings.bankName = bankName;
+      if (bankBin !== undefined) settings.bankBin = bankBin;
+      if (accountNo !== undefined) settings.accountNo = accountNo;
+      if (accountName !== undefined) settings.accountName = accountName;
+      if (intlPaymentInfo !== undefined) settings.intlPaymentInfo = intlPaymentInfo;
+      if (advancePaymentPolicy !== undefined) settings.advancePaymentPolicy = advancePaymentPolicy;
+      if (hotline !== undefined) settings.hotline = hotline;
+      if (pickupAddress !== undefined) settings.pickupAddress = pickupAddress;
+
+      for (const [k, v] of Object.entries(settings)) {
+        await queryD1('INSERT OR REPLACE INTO store_settings (key, value) VALUES (?, ?);', [k, typeof v === 'string' ? v : JSON.stringify(v)]);
+      }
+
+      return res.status(200).json({ success: true, settings });
     }
 
     return res.status(400).json({ error: 'Action không hợp lệ' });
