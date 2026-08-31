@@ -85,7 +85,7 @@ function renderStats(stats, settings) {
   if (aiToggle && settings) aiToggle.checked = !!settings.aiAutoPilot;
 }
 
-let currentBikeImageBase64 = '';
+let currentModalImages = [];
 
 const DEFAULT_BIKE_IMAGES = {
   "Mountain Bike (MTB)": "https://images.unsplash.com/photo-1576435728678-68d0fbf94e91?w=600&auto=format&fit=crop&q=80",
@@ -94,6 +94,9 @@ const DEFAULT_BIKE_IMAGES = {
   "Premium Carbon MTB": "https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?w=600&auto=format&fit=crop&q=80",
   "E-Bike (Trợ lực điện)": "https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=600&auto=format&fit=crop&q=80"
 };
+
+// Store active image index per bike card
+const bikeCardImgIndexes = {};
 
 function renderFleet(fleet) {
   const container = document.getElementById('fleetGrid');
@@ -107,14 +110,27 @@ function renderFleet(fleet) {
   container.innerHTML = fleet.map(b => {
     let badgeClass = b.status === 'Available' ? 'available' : (b.status === 'Rented' ? 'rented' : 'maintenance');
     let badgeText = b.status === 'Available' ? '🟢 Sẵn Sàng Cho Thuê' : (b.status === 'Rented' ? `🔴 Đang Thuê: ${b.currentCustomer || 'Khách'}` : '🟡 Đang Bảo Dưỡng');
-    let imgUrl = b.image || DEFAULT_BIKE_IMAGES[b.category] || DEFAULT_BIKE_IMAGES["Mountain Bike (MTB)"];
+    
+    // Normalize images array
+    const imgs = (b.images && Array.isArray(b.images) && b.images.length > 0) 
+      ? b.images 
+      : (b.image ? [b.image] : [DEFAULT_BIKE_IMAGES[b.category] || DEFAULT_BIKE_IMAGES["Mountain Bike (MTB)"]]);
+
+    const activeIdx = bikeCardImgIndexes[b.id] || 0;
+    const currentImgUrl = imgs[activeIdx] || imgs[0];
+    const totalImgs = imgs.length;
 
     return `
-      <div class="bike-card">
+      <div class="bike-card" id="card_${b.id}">
         <div>
-          <!-- BIKE PHOTO -->
+          <!-- BIKE MULTI-IMAGE CAROUSEL WRAPPER -->
           <div class="bike-img-wrap">
-            <img src="${imgUrl}" alt="${b.name}" class="bike-img" loading="lazy">
+            <img src="${currentImgUrl}" alt="${b.name}" id="img_${b.id}" class="bike-img" loading="lazy">
+            ${totalImgs > 1 ? `
+              <button class="bike-nav-prev" onclick="slideBikeCardImage('${b.id}', -1)" title="Ảnh trước">‹</button>
+              <button class="bike-nav-next" onclick="slideBikeCardImage('${b.id}', 1)" title="Ảnh tiếp theo">›</button>
+              <div class="bike-photo-count" id="count_${b.id}">📷 ${activeIdx + 1}/${totalImgs}</div>
+            ` : ''}
           </div>
 
           <div class="bike-header">
@@ -161,69 +177,79 @@ function renderFleet(fleet) {
   }).join('');
 }
 
-// IMAGE UPLOAD & PREVIEW HANDLERS
-function handleBikeImageFileSelect(e) {
-  const file = e.target.files?.[0];
-  if (!file) return;
+// Slide through bike images on card
+function slideBikeCardImage(bikeId, delta) {
+  const bike = currentFleet.find(b => b.id === bikeId);
+  if (!bike) return;
 
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    // Compress image to max width 800px
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const MAX_WIDTH = 800;
-      let width = img.width;
-      let height = img.height;
+  const imgs = (bike.images && Array.isArray(bike.images) && bike.images.length > 0) 
+    ? bike.images 
+    : (bike.image ? [bike.image] : []);
 
-      if (width > MAX_WIDTH) {
-        height = Math.round((height * MAX_WIDTH) / width);
-        width = MAX_WIDTH;
-      }
+  if (imgs.length <= 1) return;
 
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, width, height);
+  let cur = bikeCardImgIndexes[bikeId] || 0;
+  cur = (cur + delta + imgs.length) % imgs.length;
+  bikeCardImgIndexes[bikeId] = cur;
 
-      currentBikeImageBase64 = canvas.toDataURL('image/jpeg', 0.85);
-      showImagePreview(currentBikeImageBase64);
-    };
-    img.src = event.target.result;
-  };
-  reader.readAsDataURL(file);
+  const imgEl = document.getElementById(`img_${bikeId}`);
+  const countEl = document.getElementById(`count_${bikeId}`);
+  if (imgEl) imgEl.src = imgs[cur];
+  if (countEl) countEl.innerText = `📷 ${cur + 1}/${imgs.length}`;
 }
 
-function onBikeImageUrlChange(val) {
-  const url = val.trim();
-  if (url) {
-    currentBikeImageBase64 = url;
-    showImagePreview(url);
+// ==============================================================================
+// MULTI-IMAGE GALLERY MODAL HANDLERS
+// ==============================================================================
+function addBikeImageFromInput() {
+  const input = document.getElementById('newBikeImageUrlInput');
+  const url = input.value.trim();
+  if (!url) return;
+
+  currentModalImages.push(url);
+  input.value = '';
+  renderModalGallery();
+}
+
+function removeBikeImageAtIndex(idx) {
+  currentModalImages.splice(idx, 1);
+  renderModalGallery();
+}
+
+function setCoverBikeImage(idx) {
+  if (idx <= 0 || idx >= currentModalImages.length) return;
+  const item = currentModalImages.splice(idx, 1)[0];
+  currentModalImages.unshift(item);
+  renderModalGallery();
+}
+
+function renderModalGallery() {
+  const container = document.getElementById('bikeMultiImgGallery');
+  const badge = document.getElementById('bikeImageCountBadge');
+  if (badge) badge.innerText = `${currentModalImages.length} ảnh`;
+
+  if (!container) return;
+
+  if (currentModalImages.length === 0) {
+    container.innerHTML = `<div style="grid-column:1/-1; font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">Chưa có ảnh nào. Dán link ảnh ở trên rồi bấm "➕ Thêm Ảnh".</div>`;
+    return;
   }
-}
 
-function showImagePreview(src) {
-  const box = document.getElementById('bikeImgPreviewBox');
-  const img = document.getElementById('bikeImgPreview');
-  if (box && img) {
-    img.src = src;
-    box.style.display = 'block';
-  }
-}
-
-function removeBikeImage() {
-  currentBikeImageBase64 = '';
-  const input = document.getElementById('bikeImageUrlInput');
-  if (input) input.value = '';
-  const box = document.getElementById('bikeImgPreviewBox');
-  if (box) box.style.display = 'none';
+  container.innerHTML = currentModalImages.map((src, idx) => `
+    <div class="gallery-thumb-item ${idx === 0 ? 'is-cover' : ''}" onclick="setCoverBikeImage(${idx})" title="${idx === 0 ? 'Ảnh đại diện (Cover)' : 'Bấm để đặt làm ảnh đại diện'}">
+      <img src="${src}" class="gallery-thumb-img" alt="Ảnh ${idx + 1}" onerror="this.src='https://images.unsplash.com/photo-1576435728678-68d0fbf94e91?w=200'">
+      ${idx === 0 ? '<span class="cover-star-badge">⭐ Đại diện</span>' : ''}
+      <button type="button" class="btn-del-thumb" onclick="event.stopPropagation(); removeBikeImageAtIndex(${idx})" title="Xóa ảnh này">✕</button>
+    </div>
+  `).join('');
 }
 
 function openAddBikeModal() {
   document.getElementById('modalBikeTitle').innerText = '🚲 Thêm Xe Mới Vào Kho';
   document.getElementById('bikeForm').reset();
   document.getElementById('bikeIdInput').value = '';
-  removeBikeImage();
+  currentModalImages = [];
+  renderModalGallery();
   document.getElementById('bikeModal').classList.add('open');
 }
 
@@ -242,14 +268,16 @@ function openEditBikeModal(bikeId) {
   document.getElementById('bikeGearInput').value = bike.gear || '';
   document.getElementById('bikeNotesInput').value = bike.notes || '';
 
-  if (bike.image) {
-    currentBikeImageBase64 = bike.image;
-    document.getElementById('bikeImageUrlInput').value = bike.image.startsWith('http') ? bike.image : '';
-    showImagePreview(bike.image);
+  // Populate multiple images
+  if (bike.images && Array.isArray(bike.images) && bike.images.length > 0) {
+    currentModalImages = [...bike.images];
+  } else if (bike.image) {
+    currentModalImages = [bike.image];
   } else {
-    removeBikeImage();
+    currentModalImages = [];
   }
 
+  renderModalGallery();
   document.getElementById('bikeModal').classList.add('open');
 }
 
@@ -268,7 +296,9 @@ async function handleSaveBike(e) {
   const deposit = document.getElementById('bikeDepositInput').value;
   const gear = document.getElementById('bikeGearInput').value.trim();
   const notes = document.getElementById('bikeNotesInput').value.trim();
-  const image = currentBikeImageBase64;
+  
+  const images = [...currentModalImages];
+  const image = images[0] || '';
 
   const isEdit = !!id;
   const action = isEdit ? 'updateBike' : 'addBike';
@@ -286,7 +316,8 @@ async function handleSaveBike(e) {
         deposit,
         gear,
         notes,
-        image
+        image,
+        images
       })
     });
     const data = await res.json();

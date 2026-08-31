@@ -163,10 +163,11 @@ export default async function handler(req, res) {
 
   // 4. ADD NEW BIKE
   if (action === 'addBike' && req.method === 'POST') {
-    const { id, name, category, priceDaily, priceWeekly, deposit, gear, notes, image } = req.body;
+    const { id, name, category, priceDaily, priceWeekly, deposit, gear, notes, image, images } = req.body;
     if (!name) return res.status(400).json({ error: 'Tên xe không được để trống' });
 
     const newId = id || ("BK-" + String(global._bikeFleet.length + 1).padStart(2, '0'));
+    const imgList = (images && Array.isArray(images) && images.length > 0) ? images : (image ? [image] : []);
     const newBike = {
       id: newId,
       name,
@@ -178,7 +179,8 @@ export default async function handler(req, res) {
       currentCustomer: "",
       gear: gear || "",
       notes: notes || "",
-      image: image || ""
+      image: imgList[0] || image || "",
+      images: imgList
     };
     global._bikeFleet.push(newBike);
     return res.status(200).json({ success: true, bike: newBike, fleet: global._bikeFleet });
@@ -186,7 +188,7 @@ export default async function handler(req, res) {
 
   // 5. UPDATE / EDIT BIKE
   if (action === 'updateBike' && req.method === 'POST') {
-    const { id, name, category, priceDaily, priceWeekly, deposit, status, gear, notes, image } = req.body;
+    const { id, name, category, priceDaily, priceWeekly, deposit, status, gear, notes, image, images } = req.body;
     const bike = global._bikeFleet.find(b => b.id === id);
     if (!bike) return res.status(404).json({ error: 'Không tìm thấy xe' });
 
@@ -198,7 +200,13 @@ export default async function handler(req, res) {
     if (status !== undefined) bike.status = status;
     if (gear !== undefined) bike.gear = gear;
     if (notes !== undefined) bike.notes = notes;
-    if (image !== undefined) bike.image = image;
+    if (images !== undefined && Array.isArray(images)) {
+      bike.images = images;
+      bike.image = images[0] || '';
+    } else if (image !== undefined) {
+      bike.image = image;
+      bike.images = image ? [image] : [];
+    }
 
     return res.status(200).json({ success: true, bike, fleet: global._bikeFleet });
   }

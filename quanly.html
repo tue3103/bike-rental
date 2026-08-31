@@ -205,14 +205,26 @@
           <input type="number" id="bikeDepositInput" class="form-input" placeholder="5000000" value="5000000" required>
         </div>
 
-        <!-- BIKE IMAGE URL SECTION -->
+        <!-- MULTI-IMAGE GALLERY SECTION -->
         <div class="form-group">
-          <label class="form-label">Đường Link Ảnh Xe (URL):</label>
-          <input type="url" id="bikeImageUrlInput" class="form-input" placeholder="https://upanh.smilex.vn/anh-xe-01.jpg" oninput="onBikeImageUrlChange(this.value)">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <label class="form-label" style="margin-bottom:0;">Bộ Sưu Tập Ảnh Xe (Nhiều Ảnh):</label>
+            <span id="bikeImageCountBadge" style="font-size:11px; background:rgba(16,185,129,0.15); color:#10b981; padding:2px 8px; border-radius:99px; font-weight:700;">0 ảnh</span>
+          </div>
 
-          <div class="img-preview-box" id="bikeImgPreviewBox">
-            <img id="bikeImgPreview" src="" alt="Xem trước ảnh xe">
-            <button type="button" class="btn-remove-img" onclick="removeBikeImage()">✕ Xóa ảnh</button>
+          <div style="display:flex; gap:8px;">
+            <input type="url" id="newBikeImageUrlInput" class="form-input" placeholder="Dán link ảnh tại đây (vd: https://upanh.smilex.vn/anh1.jpg)...">
+            <button type="button" class="btn btn-primary" style="white-space:nowrap; padding:0 16px;" onclick="addBikeImageFromInput()">
+              ➕ Thêm Ảnh
+            </button>
+          </div>
+          <small style="color:var(--text-muted); font-size:11px; display:block; margin-top:4px;">
+            💡 Mẹo: Bạn có thể dán link rồi bấm <b>"Thêm Ảnh"</b> để thêm nhiều góc chụp (ảnh toàn thân, bộ đề, ghi đông, lốp xe...). Ảnh đầu tiên có ngôi sao ⭐ sẽ là ảnh đại diện.
+          </small>
+
+          <!-- MULTI-IMAGE THUMBNAILS GRID -->
+          <div class="multi-img-gallery" id="bikeMultiImgGallery">
+            <!-- Rendered by JS -->
           </div>
         </div>
 
