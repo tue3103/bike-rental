@@ -159,18 +159,37 @@ function updateCalculator() {
   }
 }
 
-function onDeliveryOptionChange(val) {
-  const hotelInput = document.getElementById('bookHotel');
+function setDeliveryMethod(method) {
+  const isDelivery = method === 'Hotel Delivery';
+  const tileDel = document.getElementById('tileDelivery');
+  const tilePick = document.getElementById('tilePickup');
   const hotelGroup = document.getElementById('hotelAddressGroup');
-  if (!hotelInput) return;
+  const hotelInput = document.getElementById('bookHotel');
 
-  if (val === 'Self Pickup') {
-    hotelInput.value = '197 Nguyễn Tất Thành, TP. Pleiku (Nhận tại cửa hàng)';
-    hotelInput.disabled = true;
+  const radioDel = document.querySelector('input[name="deliveryOption"][value="Hotel Delivery"]');
+  const radioPick = document.querySelector('input[name="deliveryOption"][value="Self Pickup"]');
+
+  if (isDelivery) {
+    if (radioDel) radioDel.checked = true;
+    tileDel?.classList.add('active');
+    tilePick?.classList.remove('active');
+    if (hotelGroup) hotelGroup.style.display = 'block';
+    if (hotelInput) {
+      hotelInput.value = '';
+      hotelInput.disabled = false;
+      hotelInput.required = true;
+      hotelInput.placeholder = 'Ví dụ: Pleiku Hotel, 03 Nguyễn Du...';
+    }
   } else {
-    hotelInput.value = '';
-    hotelInput.disabled = false;
-    hotelInput.placeholder = 'Ví dụ: Pleiku Hotel, 03 Nguyễn Du...';
+    if (radioPick) radioPick.checked = true;
+    tilePick?.classList.add('active');
+    tileDel?.classList.remove('active');
+    if (hotelGroup) hotelGroup.style.display = 'none';
+    if (hotelInput) {
+      hotelInput.value = '197 Nguyễn Tất Thành, TP. Pleiku (Nhận tại cửa hàng)';
+      hotelInput.disabled = false;
+      hotelInput.required = false;
+    }
   }
 }
 
@@ -179,7 +198,7 @@ function handleBookingSubmit(e) {
   const name = document.getElementById('bookName').value.trim();
   const phone = document.getElementById('bookPhone').value.trim();
   const bikeType = document.getElementById('bookBikeType').value;
-  const deliveryMethod = document.getElementById('bookDeliverySelect').value;
+  const deliveryMethod = document.querySelector('input[name="deliveryOption"]:checked')?.value || 'Hotel Delivery';
   const hotel = document.getElementById('bookHotel').value.trim();
   const days = parseInt(document.getElementById('bookDays').value, 10) || 1;
   const bikes = parseInt(document.getElementById('bookBikes').value, 10) || 1;
@@ -210,13 +229,31 @@ function handleBookingSubmit(e) {
 
 function selectBikeToRent(bikeName, bikeType) {
   const select = document.getElementById('bookBikeType');
-  if (select && bikeType) {
+  if (select) {
+    let matched = false;
     for (let opt of select.options) {
-      if (opt.value === bikeType || opt.text.includes(bikeName)) {
+      if (opt.text.toLowerCase().includes(bikeName.toLowerCase()) || opt.value.toLowerCase().includes(bikeName.toLowerCase())) {
         opt.selected = true;
+        matched = true;
         break;
       }
     }
+    if (!matched && bikeType) {
+      for (let opt of select.options) {
+        if (opt.value === bikeType) {
+          opt.selected = true;
+          break;
+        }
+      }
+    }
+  }
+
+  // Show badge
+  const badge = document.getElementById('selectedBikeBadge');
+  const badgeName = document.getElementById('selectedBikeName');
+  if (badge && badgeName) {
+    badgeName.innerText = bikeName;
+    badge.style.display = 'flex';
   }
 
   const bookingSection = document.getElementById('booking');
@@ -224,7 +261,7 @@ function selectBikeToRent(bikeName, bikeType) {
     bookingSection.scrollIntoView({ behavior: 'smooth' });
     setTimeout(() => {
       document.getElementById('bookName')?.focus();
-    }, 400);
+    }, 450);
   }
 }
 

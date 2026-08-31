@@ -478,6 +478,60 @@ body {
   gap: 14px;
 }
 
+/* INTERACTIVE DELIVERY TILES */
+.delivery-option-tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 4px;
+}
+.delivery-tile {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 12px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+.delivery-tile input[type="radio"] {
+  accent-color: var(--primary);
+  width: 18px;
+  height: 18px;
+}
+.delivery-tile:has(input:checked), .delivery-tile.active {
+  border-color: var(--primary);
+  background: rgba(16, 185, 129, 0.12);
+  box-shadow: 0 4px 15px var(--primary-glow);
+}
+.tile-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tile-icon {
+  font-size: 20px;
+}
+.tile-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+}
+.tile-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+@media (max-width: 640px) {
+  .delivery-option-tiles {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* FAQ SECTION */
 .faq-grid {
   max-width: 800px;

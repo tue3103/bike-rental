@@ -320,22 +320,60 @@
           </div>
         </div>
 
+        <!-- SELECTED BIKE NOTIFICATION BADGE -->
+        <div id="selectedBikeBadge" style="display:none; background:rgba(16,185,129,0.15); border:1px solid var(--primary); padding:10px 16px; border-radius:12px; margin-bottom:16px; align-items:center; gap:8px;">
+          <span style="font-size:18px;">✅</span>
+          <span style="font-size:13px; color:#fff;">Bạn đang chọn xe: <b id="selectedBikeName" style="color:var(--primary);">Trek Marlin 5 Highland</b></span>
+        </div>
+
         <div class="form-grid-2">
           <div class="form-group">
-            <label class="form-label">Dòng Xe Muốn Thuê:</label>
-            <select id="bookBikeType" class="form-select">
-              <option value="Xe Địa Hình Thể Thao (Trek / Giant / Trinx MTB)">🚵 Xe Địa Hình Thể Thao (Trek / Giant / Trinx MTB)</option>
-              <option value="Xe Đường Trường Touring (Giant Escape)">🚴 Xe Đường Trường Touring (Giant Escape)</option>
-              <option value="Xe Dạo Phố Nữ (Asama Rainbow)">🌸 Xe Dạo Phố Nữ (Asama Rainbow)</option>
-              <option value="Xe Carbon Cao Cấp (Sava Deck Pro)">🏆 Xe Carbon Cao Cấp (Sava Deck Pro)</option>
-            </select>
+            <label class="form-label" data-i18n="form_name">Họ và Tên (Full Name):</label>
+            <input type="text" id="bookName" class="form-input" placeholder="Ví dụ: Nguyễn Văn A / John Doe" required>
           </div>
           <div class="form-group">
-            <label class="form-label">Hình Thức Nhận Xe:</label>
-            <select id="bookDeliverySelect" class="form-select" onchange="onDeliveryOptionChange(this.value)">
-              <option value="Hotel Delivery">🚚 Giao Tận Khách Sạn (+100k khứ hồi)</option>
-              <option value="Self Pickup">🏬 Nhận Tại Shop: 197 Nguyễn Tất Thành (Miễn phí)</option>
-            </select>
+            <label class="form-label" data-i18n="form_whatsapp">Số Điện Thoại / WhatsApp:</label>
+            <input type="text" id="bookPhone" class="form-input" placeholder="0988... hoặc +84 / +1..." required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Dòng Xe Muốn Thuê:</label>
+          <select id="bookBikeType" class="form-select" style="width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--border-card); padding:12px 16px; border-radius:12px; color:#fff; font-size:14px; outline:none;">
+            <option value="Trek Marlin 5 Highland (Mountain Bike)">🚵 Trek Marlin 5 Highland (Địa hình MTB • Đề Shimano Altus • Phanh dầu)</option>
+            <option value="Giant ATX 830 Sport (Mountain Bike)">🚵 Giant ATX 830 Sport (Địa hình MTB • Khung nhôm Aluxx • 27 tốc độ)</option>
+            <option value="Giant Escape 2 City Touring">🚴 Giant Escape 2 City Touring (Đường trường Touring • Lốp 700c lướt êm)</option>
+            <option value="Sava Deck 300 Carbon Pro">🏆 Sava Deck 300 Carbon Pro (Khung Carbon siêu nhẹ • Shimano Deore)</option>
+            <option value="Trinx M100 Pro Elite (Mountain Bike)">🚵 Trinx M100 Pro Elite (Địa hình MTB • 24 tốc độ)</option>
+            <option value="Asama Rainbow Lady City">🌸 Asama Rainbow Lady City (Dạo phố nữ • Giỏ xe tiện lợi)</option>
+          </select>
+        </div>
+
+        <!-- INTERACTIVE DELIVERY TILES -->
+        <div class="form-group">
+          <label class="form-label">Hình Thức Nhận Xe:</label>
+          <div class="delivery-option-tiles">
+            <label class="delivery-tile active" id="tileDelivery" onclick="setDeliveryMethod('Hotel Delivery')">
+              <input type="radio" name="deliveryOption" value="Hotel Delivery" checked>
+              <div class="tile-content">
+                <div class="tile-icon">🚚</div>
+                <div>
+                  <div class="tile-title">Giao Tận Khách Sạn / Nơi Ở</div>
+                  <div class="tile-desc">+100.000đ khứ hồi giao & nhận xe tận nơi</div>
+                </div>
+              </div>
+            </label>
+
+            <label class="delivery-tile" id="tilePickup" onclick="setDeliveryMethod('Self Pickup')">
+              <input type="radio" name="deliveryOption" value="Self Pickup">
+              <div class="tile-content">
+                <div class="tile-icon">🏬</div>
+                <div>
+                  <div class="tile-title">Nhận Tại Cửa Hàng</div>
+                  <div class="tile-desc">197 Nguyễn Tất Thành, Pleiku • Miễn phí</div>
+                </div>
+              </div>
+            </label>
           </div>
         </div>
 
