@@ -120,8 +120,8 @@ export default async function handler(req, res) {
         session.topicId = global._sessionStore.get(sessionId)?.topicId || null;
       }
 
-      // Preserve previous conversation history from client if server instance was cold started
-      if (history && Array.isArray(history) && history.length > session.messages.length) {
+      // Initialize or rebuild session messages from client history
+      if (history && Array.isArray(history) && history.length > 0) {
         session.messages = [...history];
       }
 
