@@ -1,6 +1,9 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    { "source": "/admin", "destination": "/quanly", "permanent": true }
+  ],
   "headers": [
     {
       "source": "/(css|js|images)/(.*)",
