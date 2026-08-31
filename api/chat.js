@@ -82,6 +82,74 @@ async function updateSharedChatStore(data) {
   }
 }
 
+async function createFreshTopic(session, sessionId) {
+  try {
+    const topicRes = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/createForumTopic`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: TELEGRAM_GROUP_ID,
+        name: `🚴 Khách ${session.name || 'Du Khách'} (#${sessionId.slice(-4)})`
+      })
+    });
+    const topicData = await topicRes.json();
+    if (topicData.ok) {
+      session.topicId = topicData.result.message_thread_id;
+
+      // Send greeting info card
+      await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: TELEGRAM_GROUP_ID,
+          message_thread_id: session.topicId,
+          text: `🆕 <b>PHIÊN CHAT MỚI TỪ KHÁCH THUÊ XE</b>\n━━━━━━━━━━━━━━━━━━━━\n👤 <b>Tên khách:</b> ${session.name}\n📞 <b>SĐT/WhatsApp:</b> ${session.phone || 'Chưa cung cấp'}\n📍 <b>Khách sạn/Nơi ở:</b> ${session.hotel || 'Pleiku'}\n━━━━━━━━━━━━━━━━━━━━\n👉 <i>Bạn chỉ cần gõ tin nhắn trả lời ngay trong Topic này, khách trên web sẽ nhận được tức thì!</i>`,
+          parse_mode: 'HTML'
+        })
+      });
+    }
+  } catch (err) {
+    console.error('Create topic error:', err);
+  }
+}
+
+async function sendToTelegramTopic(session, sessionId, text, isAi = false) {
+  if (!session.topicId) {
+    await createFreshTopic(session, sessionId);
+  }
+
+  if (session.topicId) {
+    const payload = {
+      chat_id: TELEGRAM_GROUP_ID,
+      message_thread_id: session.topicId,
+      text: isAi ? `🤖 <b>[SmileX AI]:</b>\n${text}` : `💬 <b>[Khách]:</b> ${text}`,
+      parse_mode: 'HTML'
+    };
+
+    let sendRes = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    let sendData = await sendRes.json();
+
+    // If topic was deleted on Telegram or thread not found (400/404), auto recreate fresh topic
+    if (!sendData.ok && (sendData.description?.includes('thread not found') || sendData.error_code === 400)) {
+      console.log(`Topic ${session.topicId} invalid/deleted, creating fresh topic...`);
+      session.topicId = null;
+      await createFreshTopic(session, sessionId);
+      if (session.topicId) {
+        payload.message_thread_id = session.topicId;
+        await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
+    }
+  }
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -133,58 +201,8 @@ export default async function handler(req, res) {
       };
       session.messages.push(userMsg);
 
-      // Create Telegram Topic ONLY IF NOT YET CREATED
-      if (!session.topicId) {
-        try {
-          const topicRes = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/createForumTopic`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              chat_id: TELEGRAM_GROUP_ID,
-              name: `🚴 Khách ${session.name} (#${sessionId.slice(-4)})`
-            })
-          });
-          const topicData = await topicRes.json();
-          if (topicData.ok) {
-            session.topicId = topicData.result.message_thread_id;
-
-            // Send introductory card to Telegram Topic
-            await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                chat_id: TELEGRAM_GROUP_ID,
-                message_thread_id: session.topicId,
-                text: `🆕 <b>PHIÊN CHAT MỚI TỪ KHÁCH THUÊ XE</b>\n━━━━━━━━━━━━━━━━━━━━\n👤 <b>Tên khách:</b> ${session.name}\n📞 <b>SĐT/WhatsApp:</b> ${session.phone || 'Chưa cung cấp'}\n📍 <b>Khách sạn/Nơi ở:</b> ${session.hotel || 'Pleiku'}\n━━━━━━━━━━━━━━━━━━━━\n👉 <i>Bạn chỉ cần gõ tin nhắn trả lời ngay trong Topic này, khách trên web sẽ nhận được tức thì!</i>`,
-                parse_mode: 'HTML'
-              })
-            });
-          }
-        } catch (err) {
-          console.error('Create topic error:', err);
-        }
-      }
-
-      // Keep memory cache updated
-      global._sessionStore.set(sessionId, session);
-
-      // Send User's Message into Telegram Topic
-      if (session.topicId) {
-        try {
-          await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              chat_id: TELEGRAM_GROUP_ID,
-              message_thread_id: session.topicId,
-              text: `💬 <b>[Khách]:</b> ${message}`,
-              parse_mode: 'HTML'
-            })
-          });
-        } catch (err) {
-          console.error('Send message to topic error:', err);
-        }
-      }
+      // Auto deliver message to Telegram Topic (with auto-recreate if old topic was deleted)
+      await sendToTelegramTopic(session, sessionId, message, false);
 
       // AI AUTO-PILOT RESPONSE
       if (global._inventory.aiAutoPilot) {
@@ -198,27 +216,19 @@ export default async function handler(req, res) {
           session.messages.push(aiMsg);
 
           // Forward AI's response to Telegram Topic so Admin can see it
-          if (session.topicId) {
-            await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                chat_id: TELEGRAM_GROUP_ID,
-                message_thread_id: session.topicId,
-                text: `🤖 <b>[SmileX AI]:</b>\n${aiReplyText}`,
-                parse_mode: 'HTML'
-              })
-            });
-          }
+          await sendToTelegramTopic(session, sessionId, aiReplyText, true);
         }
       }
 
+      // Keep memory & remote cache updated
+      global._sessionStore.set(sessionId, session);
       store[sessionId] = session;
       await updateSharedChatStore(store);
 
       return res.status(200).json({
         success: true,
         session,
+        topicId: session.topicId,
         messages: session.messages
       });
     }
