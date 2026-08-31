@@ -58,9 +58,9 @@ function renderChatMessages() {
   if (localMessages.length === 0) {
     container.innerHTML = `
       <div class="msg-bubble ai">
-        <span class="msg-author-tag">🤖 SmileX AI Assistant</span>
-        Hello! Welcome to Pleiku. How can we help you today with bike rental, rates, or delivery?
-        <span class="msg-time">Just now</span>
+        <span class="msg-author-tag">🚴 Lễ Tân SmileX • Trực Tuyến 24/7</span>
+        Xin chào! Chào mừng bạn đến với SmileX Bike Rental Pleiku. Chúng tôi có thể hỗ trợ bạn tư vấn chọn xe, báo giá hoặc giao xe tận khách sạn như thế nào?
+        <span class="msg-time">Vừa xong</span>
       </div>
     `;
     return;
@@ -68,8 +68,8 @@ function renderChatMessages() {
 
   container.innerHTML = localMessages.map(m => `
     <div class="msg-bubble ${m.sender}">
-      ${m.sender === 'ai' ? '<span class="msg-author-tag">🤖 SmileX AI Assistant</span>' : ''}
-      ${m.sender === 'admin' ? `<span class="msg-author-tag">👨‍💼 Support: ${m.author || 'Admin'}</span>` : ''}
+      ${m.sender === 'ai' ? '<span class="msg-author-tag">🚴 Lễ Tân SmileX (Hỗ Trợ 24/7)</span>' : ''}
+      ${m.sender === 'admin' ? `<span class="msg-author-tag">👨‍💼 Quản Lý: ${m.author || 'SmileX'}</span>` : ''}
       ${m.text}
       <span class="msg-time">${m.time || ''}</span>
     </div>
