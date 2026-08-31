@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard - SmileX Bike Rental Pleiku</title>
+  <title>Hệ Thống Quản Lý Xe & Đơn Hàng - SmileX Bike Pleiku</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,91 +12,298 @@
 </head>
 <body>
 
-  <!-- ADMIN HEADER -->
-  <header class="admin-header">
-    <div class="admin-title">
-      <span>🚴</span>
-      <span>SmileX Bike Admin</span>
-      <span style="font-size:11px; background:rgba(16,185,129,0.2); color:#10b981; padding:2px 8px; border-radius:99px;">197 Nguyễn Tất Thành</span>
+  <!-- LOGIN OVERLAY SCREEN -->
+  <div class="login-overlay" id="loginOverlay">
+    <div class="login-box">
+      <div class="login-logo">🚴</div>
+      <div class="login-title">SmileX Bike Manager</div>
+      <div class="login-sub">197 Nguyễn Tất Thành, TP. Pleiku, Gia Lai</div>
+      
+      <form onsubmit="handleLogin(event)">
+        <input type="password" id="adminPassInput" class="login-input" placeholder="••••••••" required autofocus>
+        <div id="loginError" style="color:#ef4444; font-size:12px; margin-bottom:12px; display:none;"></div>
+        <button type="submit" class="login-btn">🔓 Đăng Nhập Quản Trị</button>
+      </form>
+      <div style="font-size:11px; color:var(--text-muted); margin-top:16px;">Mật khẩu mặc định: <b>smilex2026</b></div>
     </div>
-    <div style="display:flex; align-items:center; gap:12px;">
-      <a href="https://t.me/c/4298681574" target="_blank" class="btn-action" style="background:#0088cc; border:none; display:flex; align-items:center; gap:6px;">
-        <span>💬</span> Mở Telegram Group Topics
-      </a>
-      <a href="/" target="_blank" class="btn-action">🌐 Xem Website</a>
-    </div>
-  </header>
+  </div>
 
-  <div style="max-width:1200px; margin:0 auto; padding:0 20px;">
+  <!-- MAIN APP (PROTECTED) -->
+  <div id="mainApp" style="display:none;">
 
-    <!-- STATS GRID -->
-    <div class="stats-grid">
-      <div class="stat-box">
-        <div class="stat-val" id="statTotalBikes">15</div>
-        <div class="stat-label">Tổng Xe Trong Kho</div>
-        <div style="display:flex; justify-content:center; gap:8px; margin-top:8px;">
-          <button class="btn-action" onclick="updateBikeCount(1)">+ Thêm xe</button>
-          <button class="btn-action" onclick="updateBikeCount(-1)">- Bớt xe</button>
+    <!-- TOP NAVBAR -->
+    <header class="navbar">
+      <div class="nav-brand">
+        <span>🚴</span>
+        <span>SmileX Bike Fleet</span>
+        <span style="font-size:11px; background:rgba(16,185,129,0.15); color:#10b981; padding:2px 8px; border-radius:99px;">
+          📍 197 Nguyễn Tất Thành
+        </span>
+      </div>
+
+      <div class="nav-actions">
+        <a href="https://t.me/c/4298681574" target="_blank" class="btn btn-telegram">
+          <span>💬</span> Telegram Topics
+        </a>
+        <a href="/" target="_blank" class="btn btn-secondary">
+          <span>🌐</span> Xem Web
+        </a>
+        <button class="btn btn-danger" onclick="handleLogout()">
+          <span>🔒</span> Đăng xuất
+        </button>
+      </div>
+    </header>
+
+    <div class="container">
+
+      <!-- STATS STRIP -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-num" id="statTotalBikes">0</div>
+          <div class="stat-label">Tổng Số Xe Trong Kho</div>
+        </div>
+
+        <div class="stat-card featured">
+          <div class="stat-num" id="statAvailableBikes" style="color:var(--primary);">0</div>
+          <div class="stat-label">🟢 Xe Sẵn Sàng Cho Thuê</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-num" id="statRentedBikes" style="color:#ef4444;">0</div>
+          <div class="stat-label">🔴 Xe Đang Cho Thuê</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-num" id="statMaintenanceBikes" style="color:var(--accent-gold);">0</div>
+          <div class="stat-label">🟡 Xe Đang Bảo Dưỡng</div>
+        </div>
+
+        <div class="stat-card deposit">
+          <div class="stat-num" id="statTotalDeposit" style="color:var(--accent-gold); font-size:24px;">0 đ</div>
+          <div class="stat-label">💰 Tổng Tiền Cọc Đang Giữ</div>
         </div>
       </div>
 
-      <div class="stat-box featured">
-        <div class="stat-val" id="statAvailableBikes" style="color:var(--primary);">13</div>
-        <div class="stat-label">Xe Sẵn Sàng Cho Thuê</div>
+      <!-- AI ASSISTANT PANEL -->
+      <div class="panel" style="background:linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(15,23,42,0.9) 100%);">
+        <div class="panel-top">
+          <div class="panel-title">
+            <span>🤖</span> Trợ Lý Groq AI CSKH 24/7 (Đọc Tồn Kho & Bảng Giá Tự Động)
+          </div>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="aiAutoPilotToggle" style="width:18px; height:18px; accent-color:var(--primary);" onchange="toggleAiAutoPilot()" checked>
+            <span style="font-weight:700; font-size:13px; color:#fff;">Bật AI Tự Động Tư Vấn Khách</span>
+          </label>
+        </div>
+        <p style="font-size:13px; color:var(--text-muted); line-height:1.5;">
+          AI sử dụng <b>Groq LPU Engine</b> để phản hồi siêu tốc sau 0.3s. AI tự động đọc số lượng xe sẵn sàng, mức giá từng loại xe, cọc 100% hoàn trả không giữ passport, phí ship 100k và địa chỉ nhận xe tại <b>197 Nguyễn Tất Thành</b> để tư vấn cho khách bằng đúng ngôn ngữ của họ. Mọi tin nhắn đều đồng bộ về nhóm Telegram.
+        </p>
       </div>
 
-      <div class="stat-box">
-        <div class="stat-val" id="statRentedBikes" style="color:#ef4444;">2</div>
-        <div class="stat-label">Xe Đang Cho Khách Thuê</div>
+      <!-- FLEET MANAGEMENT PANEL -->
+      <div class="panel">
+        <div class="panel-top">
+          <div class="panel-title">
+            <span>🚲</span> Danh Sách Chi Tiết Từng Xe Trong Kho
+          </div>
+          <button class="btn btn-primary" onclick="openAddBikeModal()">
+            <span>➕</span> Thêm Xe Mới Vào Kho
+          </button>
+        </div>
+
+        <div class="fleet-grid" id="fleetGrid">
+          <!-- Rendered by JS -->
+        </div>
       </div>
 
-      <div class="stat-box">
-        <div class="stat-val" id="statTotalDeposit" style="color:var(--accent-gold); font-size:26px;">15.000.000 đ</div>
-        <div class="stat-label">Tổng Tiền Cọc Đang Giữ</div>
+      <!-- ORDERS MANAGEMENT PANEL -->
+      <div class="panel">
+        <div class="panel-top">
+          <div class="panel-title">
+            <span>📋</span> Danh Sách Đơn Thuê Xe & Hợp Đồng Khách Hàng
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-primary" onclick="openNewOrderModal()">
+              <span>➕</span> Tạo Đơn Thuê Xe Mới
+            </button>
+            <button class="btn btn-secondary" onclick="loadDashboardData()">
+              <span>🔄</span> Làm Mới
+            </button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Mã Đơn / Ngày</th>
+                <th>Khách Hàng & SĐT</th>
+                <th>Xe Gán & Thời Gian</th>
+                <th>Tổng Tiền Thuê</th>
+                <th>Tiền Cọc (VND)</th>
+                <th>Nơi Giao / Nhận</th>
+                <th>Trạng Thái</th>
+                <th>Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTbody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
       </div>
+
     </div>
+  </div>
 
-    <!-- AI AUTO-PILOT SETTINGS -->
-    <div class="card-panel">
-      <div class="panel-header">
-        <div class="panel-title">🤖 Trợ Lý AI Tự Động Phản Hồi (AI Auto-Pilot)</div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="aiAutoPilotToggle" class="switch-input" onchange="toggleAiAutoPilot()" checked>
-          <span style="font-weight:700; font-size:14px;">Bật AI tự động trả lời khách 24/7</span>
-        </label>
+  <!-- MODAL: ADD / EDIT BIKE -->
+  <div class="modal-overlay" id="bikeModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title" id="modalBikeTitle">🚲 Thêm Xe Mới Vào Kho</div>
+        <button class="modal-close" onclick="closeBikeModal()">✕</button>
       </div>
-      <p style="font-size:13px; color:var(--text-muted); line-height:1.5;">
-        Khi bật, AI sẽ tự động đọc số lượng xe sẵn sàng trong kho, mức giá (50k/ngày, 30k/tuần, cọc 5tr không giữ passport, ship 100k) và tư vấn bằng đúng ngôn ngữ của khách. Tất cả tin nhắn đều được đồng bộ thời gian thực vào Telegram Group Topics.
-      </p>
+
+      <form id="bikeForm" onsubmit="handleSaveBike(event)">
+        <input type="hidden" id="bikeIdInput">
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Mã Số Xe (Mã định danh):</label>
+            <input type="text" id="bikeCodeInput" class="form-input" placeholder="Ví dụ: BK-07" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phân Loại Xe:</label>
+            <select id="bikeCatSelect" class="form-select" required>
+              <option value="Mountain Bike (MTB)">Xe Địa Hình (MTB)</option>
+              <option value="Touring Road Bike">Xe Đường Trường (Touring)</option>
+              <option value="City Bike (Xe nữ)">Xe Dạo Phố (City Bike)</option>
+              <option value="Premium Carbon MTB">Xe Cao Cấp Khung Carbon</option>
+              <option value="E-Bike (Trợ lực điện)">Xe Đạp Điện Trợ Lực</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Tên Xe / Dòng Xe:</label>
+          <input type="text" id="bikeNameInput" class="form-input" placeholder="Ví dụ: Giant ATX 830 Sport Pro" required>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Giá Thuê Ngày (1 - 6 ngày):</label>
+            <input type="number" id="bikeDailyRateInput" class="form-input" placeholder="50000" value="50000" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Giá Thuê Tuần (>7 ngày):</label>
+            <input type="number" id="bikeWeeklyRateInput" class="form-input" placeholder="30000" value="30000" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Mức Tiền Cọc Riêng Cho Xe (VND):</label>
+          <input type="number" id="bikeDepositInput" class="form-input" placeholder="5000000" value="5000000" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Cấu Hình & Bộ Truyền Động:</label>
+          <input type="text" id="bikeGearInput" class="form-input" placeholder="Ví dụ: Shimano 24S, Phanh đĩa dầu, Phuộc nhún">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Ghi Chú Tình Trạng:</label>
+          <input type="text" id="bikeNotesInput" class="form-input" placeholder="Ví dụ: Xe mới 99%, gắn giá bình nước + khóa dây">
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+          <button type="button" class="btn btn-secondary" onclick="closeBikeModal()">Hủy</button>
+          <button type="submit" class="btn btn-primary">💾 Lưu Thông Tin Xe</button>
+        </div>
+      </form>
     </div>
+  </div>
 
-    <!-- ORDERS TABLE -->
-    <div class="card-panel">
-      <div class="panel-header">
-        <div class="panel-title">📋 Danh Sách Đơn Đặt Xe & Thuê Xe</div>
-        <button class="btn-action" onclick="fetchAdminData()">🔄 Làm mới</button>
+  <!-- MODAL: CREATE RENTAL ORDER -->
+  <div class="modal-overlay" id="orderModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">📋 Tạo Đơn Thuê Xe & Gán Xe</div>
+        <button class="modal-close" onclick="closeOrderModal()">✕</button>
       </div>
 
-      <div style="overflow-x:auto;">
-        <table class="orders-table">
-          <thead>
-            <tr>
-              <th>Mã Đơn / Ngày</th>
-              <th>Khách Hàng</th>
-              <th>Số Xe & Ngày</th>
-              <th>Tổng Tiền</th>
-              <th>Tiền Cọc (5Tr)</th>
-              <th>Trạng Thái</th>
-              <th>Thao Tác</th>
-            </tr>
-          </thead>
-          <tbody id="ordersTbody">
-            <!-- Rendered by JS -->
-          </tbody>
-        </table>
-      </div>
+      <form id="orderForm" onsubmit="handleSaveOrder(event)">
+        <div class="form-group">
+          <label class="form-label">Chọn Xe Trong Kho:</label>
+          <select id="orderBikeSelect" class="form-select" onchange="onSelectBikeForOrder()" required>
+            <!-- Populated by JS -->
+          </select>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Tên Khách Hàng:</label>
+            <input type="text" id="orderCustomerInput" class="form-input" placeholder="Ví dụ: Alex Smith" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Quốc Tịch / Ngôn Ngữ:</label>
+            <input type="text" id="orderNatInput" class="form-input" placeholder="Ví dụ: France 🇫🇷 hoặc Việt Nam">
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Số Điện Thoại / WhatsApp:</label>
+            <input type="text" id="orderPhoneInput" class="form-input" placeholder="+84... hoặc +33..." required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Số Ngày Thuê:</label>
+            <input type="number" id="orderDaysInput" class="form-input" min="1" max="90" value="1" oninput="onSelectBikeForOrder()" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Ngày Bắt Đầu Thuê:</label>
+          <input type="date" id="orderStartDate" class="form-input" required>
+        </div>
+
+        <div class="form-group" style="background:rgba(255,255,255,0.04); padding:10px 14px; border-radius:10px;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="orderDeliveryCheck" style="accent-color:var(--primary);" onchange="onSelectBikeForOrder()">
+            <span style="font-size:13px; font-weight:700;">🚚 Giao & Nhận Tận Nơi (+100.000đ khứ hồi)</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Địa Chỉ Giao Xe / Khách Sạn tại Pleiku:</label>
+          <input type="text" id="orderAddressInput" class="form-input" placeholder="Mặc định: Nhận tại 197 Nguyễn Tất Thành">
+        </div>
+
+        <!-- ORDER SUMMARY BOX -->
+        <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.2); border-radius:12px; padding:14px; margin:16px 0;">
+          <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
+            <span>Đơn giá ngày:</span>
+            <b id="orderSummaryRate">50.000 đ/ngày</b>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
+            <span>Tiền thuê xe:</span>
+            <b id="orderSummaryRental">50.000 đ</b>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
+            <span>Tiền cọc xe:</span>
+            <b id="orderSummaryDeposit" style="color:var(--accent-gold);">5.000.000 đ</b>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:15px; border-top:1px dashed rgba(255,255,255,0.1); padding-top:6px; margin-top:6px;">
+            <span style="font-weight:700;">Tổng Tiền Khách Thanh Toán:</span>
+            <b id="orderSummaryTotal" style="color:var(--primary); font-size:17px;">50.000 đ</b>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button type="button" class="btn btn-secondary" onclick="closeOrderModal()">Hủy</button>
+          <button type="submit" class="btn btn-primary">🚀 Xác Nhận Tạo Đơn & Gán Xe</button>
+        </div>
+      </form>
     </div>
-
   </div>
 
   <script src="/js/admin.js"></script>

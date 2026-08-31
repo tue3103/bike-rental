@@ -199,21 +199,26 @@ export default async function handler(req, res) {
 // SMART AI RESPONSE GENERATOR (MULTILINGUAL + INVENTORY AWARE)
 // ==============================================================================
 async function generateAiResponse(userMessage, session, inventory) {
-  const availableBikes = inventory.totalBikes - inventory.rentedBikes;
+  const fleet = global._bikeFleet || [];
+  const availableBikesList = fleet.filter(b => b.status === 'Available');
+  const availableCount = availableBikesList.length;
 
-  const prompt = `You are the friendly, professional customer support AI for "SmileX Bike Rental" in Pleiku, Gia Lai (Central Highlands, Vietnam).
+  const fleetSummary = availableBikesList.map(b => 
+    `- [${b.id}] ${b.name} (${b.category}): ${b.priceDaily.toLocaleString()} VND/day (weekly: ${b.priceWeekly.toLocaleString()} VND/day), Deposit: ${b.deposit.toLocaleString()} VND. Gear: ${b.gear || 'Standard'}`
+  ).join('\n');
+
+  const prompt = `You are the friendly, professional customer support AI for "SmileX Bike Rental" at 197 Nguyễn Tất Thành, TP. Pleiku, Gia Lai.
   
-Current Store & Inventory Information:
-- Available Sport Bikes: ${availableBikes} bikes in stock ready for rent.
-- Daily Rate: 50,000 VND / day (~$2.00 USD).
-- Weekly Rate (>7 days): 30,000 VND / day (~$1.20 USD - 40% discount).
-- Security Deposit: 5,000,000 VND (~$200 USD) 100% refundable upon return.
+Current Store & Fleet Available in Stock (${availableCount} bikes ready):
+${fleetSummary || '- Standard sport mountain bikes (50,000 VND/day, 5M deposit)'}
+
+Store Policies:
+- Standard Rates: 50,000 VND / day (~$2.00 USD), Weekly (>7 days) is 30,000 VND / day (~$1.20 USD).
+- Security Deposit: 100% refundable upon bike return.
 - Passport Policy: NO PASSPORT OR ID IS HELD! 5-minute fast handover.
-- Free Accessories: Quality helmets, anti-theft cable lock, handlebar phone mount, mini pump, bottle cage.
-- Delivery: 100,000 VND flat round-trip fee for door-to-door delivery & pickup anywhere in Pleiku city.
-- Store Address (Free Pickup): 197 Nguyễn Tất Thành, TP. Pleiku, Gia Lai.
-- Popular Routes: Sea Lake (Biển Hồ - 8km), Century Pines & Tea Hills (12km), Chư Đăng Ya Volcano (22km).
-- Payment Accepted: Cash (VND/USD), Wise, Revolut, VN Bank QR, Crypto (USDT).
+- Delivery: 100,000 VND flat round-trip fee for door-to-door delivery & pickup anywhere in Pleiku city. Free pickup at 197 Nguyễn Tất Thành.
+- Free Accessories: Helmets, anti-theft cable lock, phone mount, mini pump.
+- Popular Scenic Routes: Sea Lake (Biển Hồ - 8km), Century Pines & Tea Hills (12km), Chư Đăng Ya Volcano (22km).
 
 Customer's message: "${userMessage}"
 
@@ -237,14 +242,8 @@ Instructions:
             {
               role: 'system',
               content: `You are the friendly, multilingual AI customer support for "SmileX Bike Rental" at 197 Nguyễn Tất Thành, TP. Pleiku, Gia Lai.
-Current Store Info:
-- Available Sport Bikes: ${availableBikes} bikes in stock.
-- Rates: 50,000 VND/day (~$2 USD), Weekly (>7 days) is 30,000 VND/day (~$1.20 USD).
-- Security Deposit: 5,000,000 VND (~$200 USD), 100% refunded upon bike return.
-- NO PASSPORT/ID HELD. 5-minute fast handover.
-- Delivery: 100,000 VND flat round-trip delivery to hotel/homestay in Pleiku. Store pickup at 197 Nguyễn Tất Thành is FREE.
-- Free gear: Helmet, lock, phone mount, mini pump, bottle cage.
-- Scenic spots: Sea Lake (Biển Hồ - 8km), Century Pines & Tea Hills (12km), Chư Đăng Ya Volcano (22km).
+Current Store Fleet Available (${availableCount} bikes):
+${fleetSummary || '- Mountain bikes available (50k/day, 5M deposit)'}
 
 Rules:
 1. Always reply in the EXACT SAME LANGUAGE the customer uses (English, French, Vietnamese, Korean, etc.).
