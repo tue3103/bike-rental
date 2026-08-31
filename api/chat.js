@@ -103,7 +103,7 @@ async function createFreshTopic(session, sessionId) {
         body: JSON.stringify({
           chat_id: TELEGRAM_GROUP_ID,
           message_thread_id: session.topicId,
-          text: `🆕 <b>PHIÊN CHAT MỚI TỪ KHÁCH THUÊ XE</b>\n━━━━━━━━━━━━━━━━━━━━\n👤 <b>Tên khách:</b> ${session.name}\n📞 <b>SĐT/WhatsApp:</b> ${session.phone || 'Chưa cung cấp'}\n📍 <b>Khách sạn/Nơi ở:</b> ${session.hotel || 'Pleiku'}\n━━━━━━━━━━━━━━━━━━━━\n👉 <i>Bạn chỉ cần gõ tin nhắn trả lời ngay trong Topic này, khách trên web sẽ nhận được tức thì!</i>`,
+          text: `🆕 <b>PHIÊN CHAT MỚI TỪ KHÁCH THUÊ XE</b>\n━━━━━━━━━━━━━━━━━━━━\n👤 <b>Tên khách:</b> ${session.name}\n📞 <b>SĐT/WhatsApp:</b> ${session.phone || 'Chưa cung cấp'}\n📍 <b>Khách sạn/Nơi ở:</b> ${session.hotel || 'Pleiku'}\n━━━━━━━━━━━━━━━━━━━━\n👉 <i>Khi bạn gõ trả lời trong Topic này, AI sẽ <b>tự động nhường quyền (tắt AI)</b> để bạn chat 1-1 với khách. Gõ <code>/ai</code> nếu muốn bật lại AI!</i>`,
           parse_mode: 'HTML'
         })
       });
@@ -204,8 +204,8 @@ export default async function handler(req, res) {
       // Auto deliver message to Telegram Topic (with auto-recreate if old topic was deleted)
       await sendToTelegramTopic(session, sessionId, message, false);
 
-      // AI AUTO-PILOT RESPONSE
-      if (global._inventory.aiAutoPilot) {
+      // AI AUTO-PILOT RESPONSE (Only if global AI is on AND Human Admin has not taken over)
+      if (global._inventory.aiAutoPilot && !session.aiPaused) {
         const aiReplyText = await generateAiResponse(message, session, global._inventory);
         if (aiReplyText) {
           const aiMsg = {
@@ -240,10 +240,52 @@ export default async function handler(req, res) {
       const msg = req.body && req.body.message;
       if (msg && msg.text) {
         const threadId = msg.message_thread_id;
-        const text = msg.text;
+        const text = msg.text.trim();
         const fromBot = msg.from?.is_bot;
 
         if (!fromBot && threadId) {
+          // TELEGRAM COMMANDS: /ai (turn on AI), /off (turn off AI)
+          if (text === '/ai' || text === '/on' || text.toLowerCase() === 'bật ai') {
+            for (const [sId, sess] of Object.entries(store)) {
+              if (sess && String(sess.topicId) === String(threadId)) {
+                sess.aiPaused = false;
+              }
+            }
+            await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                chat_id: TELEGRAM_GROUP_ID,
+                message_thread_id: threadId,
+                text: `🤖 <b>[SmileX Bot]:</b> Đã <b>BẬT lại AI</b> cho khách này. AI sẽ tự động tư vấn các câu hỏi tiếp theo!`,
+                parse_mode: 'HTML'
+              })
+            });
+            await updateSharedChatStore(store);
+            return res.status(200).json({ ok: true });
+          }
+
+          if (text === '/off' || text === '/pause' || text.toLowerCase() === 'tắt ai') {
+            for (const [sId, sess] of Object.entries(store)) {
+              if (sess && String(sess.topicId) === String(threadId)) {
+                sess.aiPaused = true;
+              }
+            }
+            await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                chat_id: TELEGRAM_GROUP_ID,
+                message_thread_id: threadId,
+                text: `⏸️ <b>[SmileX Bot]:</b> Đã <b>TẠM DỪNG AI</b> cho khách này. Chuyển sang chế độ Admin tự chat trực tiếp 1-1! Gõ <code>/ai</code> nếu muốn bật lại.`,
+                parse_mode: 'HTML'
+              })
+            });
+            await updateSharedChatStore(store);
+            return res.status(200).json({ ok: true });
+          }
+
+          // Normal Admin Message: Auto Human Takeover (Auto-pause AI so it won't interrupt)
           const adminMsg = {
             sender: 'admin',
             text: text,
@@ -256,23 +298,25 @@ export default async function handler(req, res) {
           store[topicKey] = store[topicKey] || [];
           store[topicKey].push(adminMsg);
 
-          // 2. Also append directly to matching session in store & memory
+          // 2. Also append directly to matching session in store & memory and pause AI
           for (const [sId, sess] of Object.entries(store)) {
             if (sess && String(sess.topicId) === String(threadId)) {
               sess.messages = sess.messages || [];
               sess.messages.push(adminMsg);
+              sess.aiPaused = true; // Auto Human Takeover!
             }
           }
           for (const [sId, sess] of global._sessionStore.entries()) {
             if (sess && String(sess.topicId) === String(threadId)) {
               sess.messages = sess.messages || [];
               sess.messages.push(adminMsg);
+              sess.aiPaused = true; // Auto Human Takeover!
             }
           }
 
           // 3. Persist to shared store
           await updateSharedChatStore(store);
-          console.log(`[Admin -> Topic ${threadId}]:`, text);
+          console.log(`[Admin Takeover -> Topic ${threadId}]:`, text);
         }
       }
       return res.status(200).json({ ok: true });
