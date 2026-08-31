@@ -227,23 +227,15 @@ function handleBookingSubmit(e) {
   }
 }
 
-function selectBikeToRent(bikeName, bikeType) {
+function selectBikeToRent(bikeCode, bikeName) {
   const select = document.getElementById('bookBikeType');
+  const fullLabel = `[${bikeCode}] ${bikeName}`;
+
   if (select) {
-    let matched = false;
     for (let opt of select.options) {
-      if (opt.text.toLowerCase().includes(bikeName.toLowerCase()) || opt.value.toLowerCase().includes(bikeName.toLowerCase())) {
+      if (opt.value.includes(bikeCode) || opt.text.includes(bikeCode) || opt.text.toLowerCase().includes(bikeName.toLowerCase())) {
         opt.selected = true;
-        matched = true;
         break;
-      }
-    }
-    if (!matched && bikeType) {
-      for (let opt of select.options) {
-        if (opt.value === bikeType) {
-          opt.selected = true;
-          break;
-        }
       }
     }
   }
@@ -252,7 +244,7 @@ function selectBikeToRent(bikeName, bikeType) {
   const badge = document.getElementById('selectedBikeBadge');
   const badgeName = document.getElementById('selectedBikeName');
   if (badge && badgeName) {
-    badgeName.innerText = bikeName;
+    badgeName.innerText = fullLabel;
     badge.style.display = 'flex';
   }
 
