@@ -5,7 +5,7 @@
     { "source": "/quanly", "destination": "/quanly.html" }
   ],
   "redirects": [
-    { "source": "/admin", "destination": "/quanly", "permanent": true }
+    { "source": "/admin", "destination": "/", "permanent": true }
   ],
   "headers": [
     {
