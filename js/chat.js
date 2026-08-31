@@ -110,6 +110,12 @@ async function pollNewMessages() {
       localMessages = data.messages;
       saveLocalHistory();
       renderChatMessages();
+
+      // Show notification on chat badge if closed
+      const badge = document.getElementById('chatUnreadBadge');
+      if (badge && !isChatOpen) {
+        badge.style.display = 'flex';
+      }
     }
   } catch (e) {}
 }
@@ -117,7 +123,7 @@ async function pollNewMessages() {
 function startPolling() {
   stopPolling();
   pollNewMessages();
-  chatPollTimer = setInterval(pollNewMessages, 2500);
+  chatPollTimer = setInterval(pollNewMessages, isChatOpen ? 1500 : 3500);
 }
 
 function stopPolling() {
@@ -132,6 +138,6 @@ function saveLocalHistory() {
 
 document.addEventListener('DOMContentLoaded', () => {
   renderChatMessages();
-  // Auto poll in background if chat open
-  if (isChatOpen) startPolling();
+  // Always keep polling active in background so traveler never misses admin replies!
+  startPolling();
 });
