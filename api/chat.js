@@ -204,8 +204,11 @@ export default async function handler(req, res) {
       // Auto deliver message to Telegram Topic (with auto-recreate if old topic was deleted)
       await sendToTelegramTopic(session, sessionId, message, false);
 
+      // Check if AI is paused for this session or topic
+      const isAiPaused = session.aiPaused || store['paused_' + String(session.topicId)] || false;
+
       // AI AUTO-PILOT RESPONSE (Only if global AI is on AND Human Admin has not taken over)
-      if (global._inventory.aiAutoPilot && !session.aiPaused) {
+      if (global._inventory.aiAutoPilot && !isAiPaused) {
         const aiReplyText = await generateAiResponse(message, session, global._inventory);
         if (aiReplyText) {
           const aiMsg = {
@@ -246,6 +249,7 @@ export default async function handler(req, res) {
         if (!fromBot && threadId) {
           // TELEGRAM COMMANDS: /ai (turn on AI), /off (turn off AI)
           if (text === '/ai' || text === '/on' || text.toLowerCase() === 'bật ai') {
+            store['paused_' + String(threadId)] = false;
             for (const [sId, sess] of Object.entries(store)) {
               if (sess && String(sess.topicId) === String(threadId)) {
                 sess.aiPaused = false;
@@ -266,6 +270,7 @@ export default async function handler(req, res) {
           }
 
           if (text === '/off' || text === '/pause' || text.toLowerCase() === 'tắt ai') {
+            store['paused_' + String(threadId)] = true;
             for (const [sId, sess] of Object.entries(store)) {
               if (sess && String(sess.topicId) === String(threadId)) {
                 sess.aiPaused = true;
@@ -286,6 +291,8 @@ export default async function handler(req, res) {
           }
 
           // Normal Admin Message: Auto Human Takeover (Auto-pause AI so it won't interrupt)
+          store['paused_' + String(threadId)] = true;
+
           const adminMsg = {
             sender: 'admin',
             text: text,
