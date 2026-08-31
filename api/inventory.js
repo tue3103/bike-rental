@@ -134,6 +134,7 @@ export default async function handler(req, res) {
       const availableCount = fleet.filter(b => b.status === 'Available').length;
       const rentedCount = fleet.filter(b => b.status === 'Rented').length;
       const maintenanceCount = fleet.filter(b => b.status === 'Maintenance').length;
+      const pendingCount = orders.filter(o => o.status === 'Pending').length;
       const totalDepositHolding = orders
         .filter(o => o.status === 'Rented')
         .reduce((sum, o) => sum + (o.deposit || 0), 0);
@@ -145,6 +146,7 @@ export default async function handler(req, res) {
           availableCount,
           rentedCount,
           maintenanceCount,
+          pendingCount,
           totalDepositHolding
         },
         fleet,
@@ -260,6 +262,40 @@ export default async function handler(req, res) {
 
       await queryD1(`UPDATE orders SET status = 'Completed' WHERE id = ?;`, [orderId]);
       if (order.bikeId) {
+        await queryD1(`UPDATE bikes SET status = 'Available', current_customer = '' WHERE id = ?;`, [order.bikeId]);
+      }
+
+      const updatedFleet = await getBikes();
+      const updatedOrders = await getOrders();
+      return res.status(200).json({ success: true, fleet: updatedFleet, orders: updatedOrders });
+    }
+
+    // 8.1. APPROVE PENDING ORDER (Xác nhận cho thuê xe)
+    if (action === 'approveOrder' && req.method === 'POST') {
+      const { orderId } = req.body;
+      const orders = await getOrders();
+      const order = orders.find(o => o.id === orderId);
+      if (!order) return res.status(404).json({ error: 'Không tìm thấy đơn thuê' });
+
+      await queryD1(`UPDATE orders SET status = 'Rented' WHERE id = ?;`, [orderId]);
+      if (order.bikeId) {
+        await queryD1(`UPDATE bikes SET status = 'Rented', current_customer = ? WHERE id = ?;`, [order.customer || '', order.bikeId]);
+      }
+
+      const updatedFleet = await getBikes();
+      const updatedOrders = await getOrders();
+      return res.status(200).json({ success: true, fleet: updatedFleet, orders: updatedOrders });
+    }
+
+    // 8.2. CANCEL ORDER (Hủy đơn)
+    if (action === 'cancelOrder' && req.method === 'POST') {
+      const { orderId } = req.body;
+      const orders = await getOrders();
+      const order = orders.find(o => o.id === orderId);
+      if (!order) return res.status(404).json({ error: 'Không tìm thấy đơn thuê' });
+
+      await queryD1(`UPDATE orders SET status = 'Cancelled' WHERE id = ?;`, [orderId]);
+      if (order.bikeId && order.status === 'Rented') {
         await queryD1(`UPDATE bikes SET status = 'Available', current_customer = '' WHERE id = ?;`, [order.bikeId]);
       }
 

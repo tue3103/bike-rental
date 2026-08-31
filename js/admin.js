@@ -456,6 +456,150 @@ async function handleSaveOrder(e) {
   }
 }
 
+function renderOrders(orders) {
+  const tbody = document.getElementById('ordersTbody');
+  const pendingTbody = document.getElementById('pendingOrdersTbody');
+  const pendingPanel = document.getElementById('pendingPanel');
+  const pendingBadge = document.getElementById('pendingBadgeCount');
+
+  const pendingList = (orders || []).filter(o => o.status === 'Pending');
+  const activeOrders = (orders || []).filter(o => o.status !== 'Pending');
+
+  // Render Pending Panel
+  if (pendingPanel && pendingBadge) {
+    if (pendingList.length > 0) {
+      pendingPanel.style.display = 'block';
+      pendingBadge.innerText = `${pendingList.length} đơn chờ duyệt`;
+      if (pendingTbody) {
+        pendingTbody.innerHTML = pendingList.map(o => `
+          <tr style="background:rgba(245,158,11,0.06);">
+            <td>
+              <b style="color:var(--accent-gold); font-family:monospace;">${o.id}</b>
+              <div style="font-size:11px; color:var(--text-muted);">${o.createdAt || ''}</div>
+            </td>
+            <td>
+              <b>${o.customer}</b>
+              <div style="font-size:12px; color:var(--text-muted);">${o.phone ? '📞 ' + o.phone : 'Chưa có SĐT'} ${o.nationality ? '• ' + o.nationality : ''}</div>
+            </td>
+            <td>
+              <span class="badge badge-info">${o.bikeId || 'N/A'}</span>
+              <div style="font-size:12px; font-weight:600;">${o.bikeName || 'Xe địa hình'}</div>
+            </td>
+            <td>
+              <b>${o.days} ngày</b>
+              <div style="font-size:11px; color:var(--text-muted);">Bắt đầu: ${o.startDate || 'Hôm nay'}</div>
+            </td>
+            <td>
+              <div style="font-size:12px;">${o.deliveryAddress || '197 Nguyễn Tất Thành'}</div>
+            </td>
+            <td>
+              <b style="color:var(--primary);">${(o.grandTotal || o.rentalTotal || 0).toLocaleString()} đ</b>
+            </td>
+            <td>
+              <b style="color:var(--accent-gold);">${(o.deposit || 0).toLocaleString()} đ</b>
+            </td>
+            <td>
+              <div style="display:flex; gap:6px;">
+                <button class="btn btn-primary" style="padding:6px 12px; font-size:12px; font-weight:700;" onclick="approveOrder('${o.id}')" title="Xác nhận cho thuê & Giao xe">
+                  ✅ Duyệt & Cho Thuê
+                </button>
+                <button class="btn btn-danger" style="padding:6px 10px; font-size:12px;" onclick="cancelOrder('${o.id}')" title="Hủy yêu cầu">
+                  ✕ Từ chối
+                </button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      }
+    } else {
+      pendingPanel.style.display = 'none';
+    }
+  }
+
+  // Render Active Orders Table
+  if (tbody) {
+    if (activeOrders.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--text-muted);">Chưa có đơn thuê nào.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = activeOrders.map(o => {
+      const isRented = o.status === 'Rented';
+      const isCompleted = o.status === 'Completed';
+      const isCancelled = o.status === 'Cancelled';
+      const statusBadge = isRented 
+        ? `<span class="badge badge-danger">🔴 Đang thuê</span>`
+        : (isCompleted 
+            ? `<span class="badge badge-success">🟢 Đã trả xe</span>` 
+            : (isCancelled ? `<span class="badge badge-secondary">⚪ Đã hủy</span>` : `<span class="badge badge-warning">${o.status}</span>`));
+
+      return `
+        <tr>
+          <td>
+            <b style="font-family:monospace;">${o.id}</b>
+            <div style="font-size:11px; color:var(--text-muted);">${o.createdAt || ''}</div>
+          </td>
+          <td>
+            <b>${o.customer}</b>
+            <div style="font-size:12px; color:var(--text-muted);">${o.phone ? '📞 ' + o.phone : ''} ${o.nationality ? '• ' + o.nationality : ''}</div>
+          </td>
+          <td>
+            <span class="badge badge-info">${o.bikeId || ''}</span>
+            <div style="font-size:12px;">${o.bikeName || ''} (${o.days} ngày)</div>
+          </td>
+          <td>
+            <b>${(o.grandTotal || o.rentalTotal || 0).toLocaleString()} đ</b>
+          </td>
+          <td>
+            <b style="color:var(--accent-gold);">${(o.deposit || 0).toLocaleString()} đ</b>
+          </td>
+          <td>
+            <div style="font-size:12px;">${o.deliveryAddress || 'Tại shop'}</div>
+          </td>
+          <td>${statusBadge}</td>
+          <td>
+            ${isRented ? `
+              <button class="btn btn-success" style="padding:4px 8px; font-size:11px;" onclick="completeOrder('${o.id}')">
+                🔄 Trả Xe & Hoàn Cọc
+              </button>
+            ` : `<span style="font-size:11px; color:var(--text-muted);">-</span>`}
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+}
+
+async function approveOrder(orderId) {
+  if (!confirm(`Xác nhận duyệt cho thuê xe cho đơn ${orderId}? Xe sẽ chuyển sang trạng thái [Đang thuê].`)) return;
+  try {
+    const res = await fetch('/api/inventory?action=approveOrder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId })
+    });
+    const data = await res.json();
+    if (data.success) loadDashboardData();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function cancelOrder(orderId) {
+  if (!confirm(`Bạn có chắc muốn từ chối / hủy đơn ${orderId} này?`)) return;
+  try {
+    const res = await fetch('/api/inventory?action=cancelOrder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId })
+    });
+    const data = await res.json();
+    if (data.success) loadDashboardData();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
 async function completeOrder(orderId) {
   if (!confirm(`Xác nhận khách đã trả xe cho đơn ${orderId} & Hoàn trả 100% tiền cọc?`)) return;
   try {

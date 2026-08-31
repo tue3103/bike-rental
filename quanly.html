@@ -100,6 +100,36 @@
         </p>
       </div>
 
+      <!-- PENDING BOOKINGS FROM AI & WEB (CHỜ DUYỆT) -->
+      <div class="panel" id="pendingPanel" style="border-left: 4px solid var(--accent-gold); display:none;">
+        <div class="panel-top">
+          <div class="panel-title" style="color:var(--accent-gold);">
+            <span>⏳</span> Đơn Đặt Xe Chờ Duyệt (Từ AI Live Chat & Web)
+            <span class="badge badge-warning" id="pendingBadgeCount" style="margin-left:8px; font-size:13px;">0 đơn</span>
+          </div>
+          <span style="font-size:12px; color:var(--text-muted);">Khách đặt xe qua AI Chat sẽ vào đây chờ bạn bấm [Xác Nhận Cho Thuê]</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Mã Đơn / Giờ Đặt</th>
+                <th>Khách Hàng & SĐT</th>
+                <th>Dòng Xe Đặt</th>
+                <th>Thời Gian & Ngày Bắt Đầu</th>
+                <th>Nơi Giao / Nhận</th>
+                <th>Dự Tính (Thuê + Ship)</th>
+                <th>Mức Cọc</th>
+                <th>Hành Động Phê Duyệt</th>
+              </tr>
+            </thead>
+            <tbody id="pendingOrdersTbody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- FLEET MANAGEMENT PANEL -->
       <div class="panel">
         <div class="panel-top">
@@ -120,7 +150,7 @@
       <div class="panel">
         <div class="panel-top">
           <div class="panel-title">
-            <span>📋</span> Danh Sách Đơn Thuê Xe & Hợp Đồng Khách Hàng
+            <span>📋</span> Danh Sách Đơn Đang Thuê & Lịch Sử Hoàn Cọc
           </div>
           <div style="display:flex; gap:8px;">
             <button class="btn btn-primary" onclick="openNewOrderModal()">
