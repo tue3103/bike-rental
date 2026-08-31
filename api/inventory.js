@@ -33,7 +33,7 @@ global._bikeFleet = global._bikeFleet || [];
 global._orders = global._orders || [];
 global._storeSettings = global._storeSettings || {
   pickupAddress: "197 Nguyễn Tất Thành, TP. Pleiku, Gia Lai",
-  hotline: "0979.820.789",
+  hotline: "0773.486.199",
   aiAutoPilot: true
 };
 

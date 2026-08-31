@@ -515,39 +515,165 @@ body {
   color: var(--text-muted);
 }
 
-/* FLOATING FAST CONTACT BAR */
-.floating-bar {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(15, 23, 42, 0.95);
-  border: 1px solid var(--primary);
-  border-radius: 99px;
-  padding: 8px 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-  z-index: 999;
+/* BIKE SHOWCASE GRID */
+.bike-showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 20px;
+  margin-top: 24px;
 }
-.float-btn {
+.bike-showcase-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.25s ease;
+}
+.bike-showcase-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px var(--primary-glow);
+}
+.bike-showcase-img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  background: #000;
+}
+.bike-showcase-body {
+  padding: 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.bike-showcase-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 4px;
+}
+.bike-showcase-cat {
+  font-size: 12px;
+  color: var(--primary);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.bike-showcase-gear {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+.bike-showcase-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px dashed rgba(255,255,255,0.08);
+  padding-top: 10px;
+  margin-top: 10px;
+}
+.bike-showcase-price {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--accent);
+}
+.btn-rent-card {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+.btn-rent-card:hover {
+  background: #059669;
+  transform: scale(1.03);
+}
+
+/* GOOGLE MAPS BUTTON */
+.btn-map-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.15);
+  padding: 4px 10px;
   border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+  margin-left: 8px;
+  transition: all 0.2s ease;
+}
+.btn-map-link:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+/* MOBILE STICKY BAR */
+.mobile-sticky-bar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding: 10px 16px;
+  z-index: 999;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.sticky-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 12px;
   font-size: 13px;
   font-weight: 800;
   text-decoration: none;
-  color: #fff;
+  border: none;
+  cursor: pointer;
 }
-.float-btn.whatsapp { background: #25d366; color: #000; }
-.float-btn.zalo { background: #0068ff; }
-.float-btn.call { background: var(--primary); }
+.sticky-btn.phone {
+  background: #1e293b;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.sticky-btn.chat {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 4px 15px var(--primary-glow);
+}
+
+@media (max-width: 768px) {
+  .mobile-sticky-bar {
+    display: grid;
+  }
+  body {
+    padding-bottom: 65px;
+  }
+  .chat-launcher-btn {
+    bottom: 75px !important;
+  }
+}
 
 @media (max-width: 640px) {
   .form-grid-2 { grid-template-columns: 1fr; }
-  .floating-bar { width: 92%; justify-content: space-around; padding: 6px 10px; }
-  .float-btn { padding: 6px 12px; font-size: 12px; }
 }

@@ -208,6 +208,26 @@ function handleBookingSubmit(e) {
   }
 }
 
+function selectBikeToRent(bikeName, bikeType) {
+  const select = document.getElementById('bookBikeType');
+  if (select && bikeType) {
+    for (let opt of select.options) {
+      if (opt.value === bikeType || opt.text.includes(bikeName)) {
+        opt.selected = true;
+        break;
+      }
+    }
+  }
+
+  const bookingSection = document.getElementById('booking');
+  if (bookingSection) {
+    bookingSection.scrollIntoView({ behavior: 'smooth' });
+    setTimeout(() => {
+      document.getElementById('bookName')?.focus();
+    }, 400);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   applyLanguage();
   updateCalculator();
