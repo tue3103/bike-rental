@@ -167,26 +167,35 @@ function updateFormLiveCost() {
   const days = parseInt(daysInput?.value, 10) || 1;
   const bikes = parseInt(bikesInput?.value, 10) || 1;
 
+  const depositPerBike = 5000000;
+  const totalDeposit = depositPerBike * bikes;
+
   const dailyRate = days > 7 ? 30000 : 50000;
   const bikeTotal = days * dailyRate * bikes;
   const isDelivery = deliveryOption === 'Hotel Delivery';
   const deliveryFee = isDelivery ? 100000 : 0;
-  const total = bikeTotal + deliveryFee;
+  const totalRentalCost = bikeTotal + deliveryFee;
+  const refundAmount = Math.max(0, totalDeposit - totalRentalCost);
 
+  const depositBikeCountEl = document.getElementById('liveDepositBikeCount');
+  const depositTotalEl = document.getElementById('liveDepositTotal');
   const rateLabel = document.getElementById('liveRateLabel');
   const bikesLabel = document.getElementById('liveBikesLabel');
   const bikeTotalEl = document.getElementById('liveBikeTotal');
   const deliveryFeeEl = document.getElementById('liveDeliveryFee');
-  const totalEl = document.getElementById('liveTotalPayment');
+  const refundAmountEl = document.getElementById('liveRefundAmount');
+
+  if (depositBikeCountEl) depositBikeCountEl.innerText = `${bikes} xe`;
+  if (depositTotalEl) depositTotalEl.innerText = `${totalDeposit.toLocaleString()} đ`;
 
   if (rateLabel) rateLabel.innerText = `${days} ngày x ${dailyRate.toLocaleString()}đ${days > 7 ? ' (Giá tuần)' : ''}`;
   if (bikesLabel) bikesLabel.innerText = `${bikes} xe`;
-  if (bikeTotalEl) bikeTotalEl.innerText = `${bikeTotal.toLocaleString()} đ`;
+  if (bikeTotalEl) bikeTotalEl.innerText = `- ${bikeTotal.toLocaleString()} đ`;
   if (deliveryFeeEl) {
-    deliveryFeeEl.innerText = isDelivery ? '+100.000 đ (Khứ hồi)' : '0 đ (Miễn phí nhận tại shop)';
+    deliveryFeeEl.innerText = isDelivery ? '- 100.000 đ' : '0 đ (Miễn phí nhận tại shop)';
     deliveryFeeEl.style.color = isDelivery ? 'var(--accent-gold)' : 'var(--primary)';
   }
-  if (totalEl) totalEl.innerText = `${total.toLocaleString()} đ`;
+  if (refundAmountEl) refundAmountEl.innerText = `${refundAmount.toLocaleString()} đ`;
 }
 
 function setDeliveryMethod(method) {
@@ -234,9 +243,13 @@ function handleBookingSubmit(e) {
   const days = parseInt(document.getElementById('bookDays').value, 10) || 1;
   const bikes = parseInt(document.getElementById('bookBikes').value, 10) || 1;
 
+  const depositPerBike = 5000000;
+  const totalDeposit = depositPerBike * bikes;
+
   const rate = days > 7 ? 30000 : 50000;
   const deliveryFee = deliveryMethod === 'Hotel Delivery' ? 100000 : 0;
-  const total = (days * rate * bikes) + deliveryFee;
+  const totalRentalCost = (days * rate * bikes) + deliveryFee;
+  const refundAmount = Math.max(0, totalDeposit - totalRentalCost);
 
   // Save guest name for chat
   localStorage.setItem('smilex_guest_name', name);
@@ -248,8 +261,8 @@ function handleBookingSubmit(e) {
     : (isVi ? 'Nhận trực tiếp tại shop (197 Nguyễn Tất Thành)' : 'Pickup at store (197 Nguyen Tat Thanh)');
 
   const promptMessage = isVi
-    ? `📋 [YÊU CẦU ĐẶT THUÊ XE]\n• Khách hàng: ${name}\n• Số điện thoại: ${phone}\n• Dòng xe: ${bikeType}\n• Số lượng: ${bikes} xe\n• Thời gian thuê: ${days} ngày\n• Nơi nhận: ${deliveryText}\n• Tổng tiền dự tính: ${total.toLocaleString()} đ (+ Cọc 5tr hoàn 100% khi trả xe).\n👉 Nhờ Lễ Tân SmileX kiểm tra xe & xác nhận đơn giúp mình nhé!`
-    : `📋 [BIKE RENTAL RESERVATION]\n• Guest Name: ${name}\n• WhatsApp/Phone: ${phone}\n• Bike Choice: ${bikeType}\n• Quantity: ${bikes} bike(s)\n• Duration: ${days} day(s)\n• Location: ${deliveryText}\n• Estimated Total: ${total.toLocaleString()} VND (+ 5M refundable deposit).\n👉 Please confirm my reservation and arrange delivery. Thank you!`;
+    ? `📋 [YÊU CẦU ĐẶT THUÊ XE]\n• Khách hàng: ${name}\n• Số điện thoại: ${phone}\n• Chiếc xe chọn: ${bikeType}\n• Số lượng: ${bikes} xe\n• Thời gian thuê: ${days} ngày\n• Nơi nhận: ${deliveryText}\n• 🛡️ Tiền cọc xe: ${totalDeposit.toLocaleString()} đ\n• 🚴 Chi phí thuê & Ship: ${totalRentalCost.toLocaleString()} đ (trừ vào tiền cọc khi trả xe)\n• 💵 Số tiền nhận lại khi trả xe: ${refundAmount.toLocaleString()} đ\n👉 Nhờ Lễ Tân SmileX kiểm tra xe & hướng dẫn nhận xe giúp mình nhé!`
+    : `📋 [BIKE RENTAL RESERVATION]\n• Guest Name: ${name}\n• WhatsApp/Phone: ${phone}\n• Selected Bike: ${bikeType}\n• Quantity: ${bikes} bike(s)\n• Duration: ${days} day(s)\n• Handover Location: ${deliveryText}\n• 🛡️ Deposit: ${totalDeposit.toLocaleString()} VND\n• 🚴 Rental & Delivery Cost: ${totalRentalCost.toLocaleString()} VND (deducted upon bike return)\n• 💵 Refund on Return: ${refundAmount.toLocaleString()} VND\n👉 Please confirm my reservation and arrange delivery. Thank you!`;
 
   if (typeof quickBookPrompt === 'function') {
     quickBookPrompt(promptMessage);

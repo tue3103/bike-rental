@@ -382,22 +382,31 @@
           </div>
         </div>
 
-        <!-- LIVE REAL-TIME COST CALCULATION BOX -->
-        <div id="bookingLiveCostBox" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(16,185,129,0.3); border-radius: 14px; padding: 14px 18px; margin-top: 10px; margin-bottom: 6px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:13px; color:var(--text-muted);">
-            <span>🚴 Tiền thuê xe (<span id="liveRateLabel">1 ngày x 50.000đ</span> x <span id="liveBikesLabel">1 xe</span>):</span>
-            <b id="liveBikeTotal" style="color:#fff;">50.000 đ</b>
-          </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; font-size:13px; color:var(--text-muted);">
-            <span>🚚 Phí giao & nhận xe tận nơi:</span>
-            <b id="liveDeliveryFee" style="color:var(--accent-gold);">+100.000 đ (Khứ hồi)</b>
-          </div>
-          <div style="border-top:1px dashed rgba(255,255,255,0.15); padding-top:10px; display:flex; justify-content:space-between; align-items:center;">
+        <!-- LIVE REAL-TIME DEPOSIT & REFUND CALCULATION BOX -->
+        <div id="bookingLiveCostBox" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(16,185,129,0.35); border-radius: 14px; padding: 16px 18px; margin-top: 12px; margin-bottom: 6px; overflow:hidden;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-bottom:8px; border-bottom:1px dashed rgba(255,255,255,0.12);">
             <div>
-              <div style="font-size:15px; font-weight:800; color:#fff;">Tổng Tiền Dự Tính:</div>
-              <div style="font-size:11px; color:var(--text-muted);">+ 5.000.000đ tiền cọc (hoàn trả 100% khi trả xe)</div>
+              <div style="font-size:13px; font-weight:700; color:var(--accent-gold);">🛡️ Tiền Cọc Nhận Xe (<span id="liveDepositBikeCount">1 xe</span>):</div>
+              <div style="font-size:11px; color:var(--text-muted);">Khách thanh toán cọc để giữ xe & nhận bàn giao</div>
             </div>
-            <div id="liveTotalPayment" style="font-size:22px; font-weight:800; color:var(--primary);">150.000 đ</div>
+            <b id="liveDepositTotal" style="font-size:18px; color:var(--accent-gold);">5.000.000 đ</b>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:13px; color:var(--text-muted);">
+            <span>🚴 Tiền thuê xe (<span id="liveRateLabel">1 ngày x 50.000đ</span> x <span id="liveBikesLabel">1 xe</span>):</span>
+            <b id="liveBikeTotal" style="color:#fff;">- 50.000 đ</b>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:13px; color:var(--text-muted);">
+            <span>🚚 Phí giao & nhận xe tận nơi:</span>
+            <b id="liveDeliveryFee" style="color:var(--accent-gold);">- 100.000 đ</b>
+          </div>
+
+          <div style="border-top:1px solid rgba(16,185,129,0.25); display:flex; justify-content:space-between; align-items:center; background:rgba(16,185,129,0.09); margin:0 -18px -16px -18px; padding:12px 18px;">
+            <div>
+              <div style="font-size:14px; font-weight:800; color:#fff;">💵 Số Tiền Nhận Lại Khi Trả Xe:</div>
+              <div style="font-size:11px; color:var(--text-muted);">Hoàn trả ngay 100% phần dư (Cọc trừ Tiền thuê & Ship)</div>
+            </div>
+            <div id="liveRefundAmount" style="font-size:22px; font-weight:800; color:var(--primary);">4.850.000 đ</div>
           </div>
         </div>
 
