@@ -213,8 +213,8 @@ function showImagePreview(src) {
 
 function removeBikeImage() {
   currentBikeImageBase64 = '';
-  document.getElementById('bikeImageUrlInput').value = '';
-  document.getElementById('bikeImageFileInput').value = '';
+  const input = document.getElementById('bikeImageUrlInput');
+  if (input) input.value = '';
   const box = document.getElementById('bikeImgPreviewBox');
   if (box) box.style.display = 'none';
 }

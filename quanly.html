@@ -205,17 +205,10 @@
           <input type="number" id="bikeDepositInput" class="form-input" placeholder="5000000" value="5000000" required>
         </div>
 
-        <!-- BIKE IMAGE UPLOAD SECTION -->
+        <!-- BIKE IMAGE URL SECTION -->
         <div class="form-group">
-          <label class="form-label">Hình Ảnh Xe (Tải ảnh từ máy / điện thoại hoặc dán link):</label>
-          <div class="img-upload-zone" onclick="document.getElementById('bikeImageFileInput').click()">
-            <span style="font-size:26px; display:block; margin-bottom:4px;">📸</span>
-            <span style="font-size:13px; font-weight:700; color:#fff;">Bấm vào đây để chọn ảnh xe từ máy tính / điện thoại</span>
-            <span style="font-size:11px; color:var(--text-muted); display:block; margin-top:2px;">(Tự động nén & tối ưu ảnh)</span>
-            <input type="file" id="bikeImageFileInput" accept="image/*" style="display:none;" onchange="handleBikeImageFileSelect(event)">
-          </div>
-          
-          <input type="text" id="bikeImageUrlInput" class="form-input" placeholder="Hoặc dán link ảnh trực tuyến (URL) tại đây..." oninput="onBikeImageUrlChange(this.value)">
+          <label class="form-label">Đường Link Ảnh Xe (URL):</label>
+          <input type="url" id="bikeImageUrlInput" class="form-input" placeholder="https://upanh.smilex.vn/anh-xe-01.jpg" oninput="onBikeImageUrlChange(this.value)">
 
           <div class="img-preview-box" id="bikeImgPreviewBox">
             <img id="bikeImgPreview" src="" alt="Xem trước ảnh xe">
