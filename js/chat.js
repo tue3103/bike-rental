@@ -90,19 +90,31 @@ async function sendChatMessage(e) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         sessionId: chatSessionId,
-        topicId: chatTopicId || null,
+        topicId: chatTopicId ? parseInt(chatTopicId, 10) : null,
         message: text,
         name: localStorage.getItem('smilex_guest_name') || ''
       })
     });
     const data = await res.json();
     if (data.success) {
-      if (data.session?.topicId || data.topicId) {
-        chatTopicId = data.session?.topicId || data.topicId;
-        localStorage.setItem(CHAT_TOPIC_KEY, String(chatTopicId));
+      const respTopicId = data.session?.topicId || data.topicId;
+      if (respTopicId) {
+        chatTopicId = String(respTopicId);
+        localStorage.setItem(CHAT_TOPIC_KEY, chatTopicId);
       }
-      if (data.messages) {
-        localMessages = data.messages;
+      
+      // Safely merge incoming messages without wiping previous history
+      if (data.messages && Array.isArray(data.messages)) {
+        if (data.messages.length >= localMessages.length) {
+          localMessages = data.messages;
+        } else {
+          // Merge any AI / Admin messages not yet in localMessages
+          data.messages.forEach(m => {
+            if (m.sender !== 'user' && !localMessages.some(lm => lm.text === m.text && lm.sender === m.sender)) {
+              localMessages.push(m);
+            }
+          });
+        }
         saveLocalHistory();
         renderChatMessages();
       }
@@ -118,18 +130,26 @@ async function pollNewMessages() {
     const data = await res.json();
     if (data.success) {
       if (data.topicId && !chatTopicId) {
-        chatTopicId = data.topicId;
-        localStorage.setItem(CHAT_TOPIC_KEY, String(chatTopicId));
+        chatTopicId = String(data.topicId);
+        localStorage.setItem(CHAT_TOPIC_KEY, chatTopicId);
       }
-      if (data.messages && data.messages.length > localMessages.length) {
-        localMessages = data.messages;
-        saveLocalHistory();
-        renderChatMessages();
+      if (data.messages && Array.isArray(data.messages)) {
+        let hasNew = false;
+        data.messages.forEach(m => {
+          if (!localMessages.some(lm => lm.text === m.text && lm.sender === m.sender)) {
+            localMessages.push(m);
+            hasNew = true;
+          }
+        });
+        if (hasNew) {
+          saveLocalHistory();
+          renderChatMessages();
 
-        // Show notification on chat badge if closed
-        const badge = document.getElementById('chatUnreadBadge');
-        if (badge && !isChatOpen) {
-          badge.style.display = 'flex';
+          // Show notification badge if chat window is closed
+          const badge = document.getElementById('chatUnreadBadge');
+          if (badge && !isChatOpen) {
+            badge.style.display = 'flex';
+          }
         }
       }
     }
