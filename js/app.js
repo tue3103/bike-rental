@@ -159,6 +159,36 @@ function updateCalculator() {
   }
 }
 
+function updateFormLiveCost() {
+  const daysInput = document.getElementById('bookDays');
+  const bikesInput = document.getElementById('bookBikes');
+  const deliveryOption = document.querySelector('input[name="deliveryOption"]:checked')?.value || 'Hotel Delivery';
+
+  const days = parseInt(daysInput?.value, 10) || 1;
+  const bikes = parseInt(bikesInput?.value, 10) || 1;
+
+  const dailyRate = days > 7 ? 30000 : 50000;
+  const bikeTotal = days * dailyRate * bikes;
+  const isDelivery = deliveryOption === 'Hotel Delivery';
+  const deliveryFee = isDelivery ? 100000 : 0;
+  const total = bikeTotal + deliveryFee;
+
+  const rateLabel = document.getElementById('liveRateLabel');
+  const bikesLabel = document.getElementById('liveBikesLabel');
+  const bikeTotalEl = document.getElementById('liveBikeTotal');
+  const deliveryFeeEl = document.getElementById('liveDeliveryFee');
+  const totalEl = document.getElementById('liveTotalPayment');
+
+  if (rateLabel) rateLabel.innerText = `${days} ngày x ${dailyRate.toLocaleString()}đ${days > 7 ? ' (Giá tuần)' : ''}`;
+  if (bikesLabel) bikesLabel.innerText = `${bikes} xe`;
+  if (bikeTotalEl) bikeTotalEl.innerText = `${bikeTotal.toLocaleString()} đ`;
+  if (deliveryFeeEl) {
+    deliveryFeeEl.innerText = isDelivery ? '+100.000 đ (Khứ hồi)' : '0 đ (Miễn phí nhận tại shop)';
+    deliveryFeeEl.style.color = isDelivery ? 'var(--accent-gold)' : 'var(--primary)';
+  }
+  if (totalEl) totalEl.innerText = `${total.toLocaleString()} đ`;
+}
+
 function setDeliveryMethod(method) {
   const isDelivery = method === 'Hotel Delivery';
   const tileDel = document.getElementById('tileDelivery');
@@ -191,6 +221,7 @@ function setDeliveryMethod(method) {
       hotelInput.required = false;
     }
   }
+  updateFormLiveCost();
 }
 
 function handleBookingSubmit(e) {
@@ -260,5 +291,6 @@ function selectBikeToRent(bikeCode, bikeName) {
 document.addEventListener('DOMContentLoaded', () => {
   applyLanguage();
   updateCalculator();
+  updateFormLiveCost();
 });
 
