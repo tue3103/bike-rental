@@ -221,61 +221,51 @@
     </div>
   </section>
 
-  <!-- BOOKING FORM -->
+  <!-- CONVERSATIONAL BOOKING STATION (1-CLICK LIVE CHAT) -->
   <section class="section" id="booking">
     <div class="container">
       <div class="section-header">
-        <span class="section-tag" data-i18n="sec_book_tag">RESERVATION</span>
-        <h2 class="section-title" data-i18n="sec_book_title">Book Your Bicycle in 1 Minute</h2>
-        <p class="section-desc">We will confirm your booking immediately via WhatsApp / Phone and deliver to your hotel.</p>
+        <span class="section-tag" data-i18n="sec_book_tag">RESERVATION & SUPPORT</span>
+        <h2 class="section-title" data-i18n="sec_book_title">Đặt Thuê Xe Trực Tuyến Trong 1 Phút</h2>
+        <p class="section-desc">Trò chuyện trực tiếp với Lễ Tân để nhận tư vấn, chọn xe ưng ý và xác nhận giao xe tận khách sạn siêu tốc.</p>
       </div>
 
-      <form class="booking-form" onsubmit="handleBookingSubmit(event)">
-        <div class="form-grid-2">
-          <div class="form-group">
-            <label class="form-label" data-i18n="form_name">Full Name:</label>
-            <input type="text" id="bookName" class="form-input" placeholder="e.g. John Doe" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" data-i18n="form_whatsapp">WhatsApp / Phone Number:</label>
-            <input type="text" id="bookPhone" class="form-input" placeholder="+84... or +1..." required>
-          </div>
+      <div class="booking-form" style="text-align:center; background:linear-gradient(145deg, rgba(16,185,129,0.08) 0%, rgba(15,23,42,0.95) 100%); border:1.5px solid var(--primary); box-shadow:0 12px 40px var(--primary-glow);">
+        <div style="font-size:40px; margin-bottom:12px;">🚴💬</div>
+        <h3 style="font-size:22px; font-weight:800; color:#fff; margin-bottom:8px;">Nhắn Tin Trực Tiếp Với Lễ Tân SmileX</h3>
+        <p style="font-size:14px; color:var(--text-muted); max-width:480px; margin:0 auto 20px; line-height:1.6;">
+          Hỗ trợ bằng tiếng Việt & tiếng Anh. Báo giá tức thì, không cần điền form phức tạp, hoàn cọc 100% khi trả xe!
+        </p>
+
+        <!-- QUICK CHIPS -->
+        <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:24px;">
+          <button type="button" class="btn-secondary" style="font-size:13px; padding:8px 14px; border-radius:99px;" onclick="quickBookPrompt('Tôi muốn thuê 1 chiếc xe thể thao leo núi (Trek/Giant) trong 2 ngày, giao tới khách sạn.')">
+            🚲 Thuê xe địa hình Trek/Giant
+          </button>
+          <button type="button" class="btn-secondary" style="font-size:13px; padding:8px 14px; border-radius:99px;" onclick="quickBookPrompt('Tôi muốn thuê xe đi phượt Biển Hồ & Đồi Chè, shop tư vấn giúp mình nhé!')">
+            🌲 Tư vấn phượt Biển Hồ Chè
+          </button>
+          <button type="button" class="btn-secondary" style="font-size:13px; padding:8px 14px; border-radius:99px;" onclick="quickBookPrompt('Mức tiền đặt cọc và chính sách giao xe tận nơi như thế nào vậy shop?')">
+            💰 Hỏi về tiền cọc & giao xe
+          </button>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Delivery / Pickup Method:</label>
-          <div style="display:flex; gap:16px; margin-top:6px; flex-wrap:wrap;">
-            <label style="display:flex; align-items:center; gap:6px; font-size:14px; cursor:pointer;">
-              <input type="radio" name="deliveryOption" value="Hotel Delivery" checked style="accent-color:var(--primary);" onchange="document.getElementById('bookHotel').value=''; document.getElementById('bookHotel').placeholder='e.g. Pleiku Hotel, 03 Nguyen Du...';">
-              🚚 Hotel Delivery (+100k)
-            </label>
-            <label style="display:flex; align-items:center; gap:6px; font-size:14px; cursor:pointer;">
-              <input type="radio" name="deliveryOption" value="Self Pickup at Shop (197 Nguyen Tat Thanh)" style="accent-color:var(--primary);" onchange="document.getElementById('bookHotel').value='197 Nguyễn Tất Thành, TP. Pleiku';">
-              🏬 Pickup at Store: 197 Nguyễn Tất Thành (Free)
-            </label>
-          </div>
+        <!-- MAIN ACTION BUTTONS -->
+        <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+          <button type="button" class="btn-primary" style="padding:14px 28px; font-size:15px; font-weight:800; box-shadow:0 6px 25px var(--primary-glow);" onclick="toggleChat()">
+            💬 Mở Khung Chat Đặt Xe Ngay
+          </button>
+          <a href="https://wa.me/84979820789?text=Hello%20SmileX%20Bike,%20I%20want%20to%20rent%20a%20bicycle%20in%20Pleiku" target="_blank" class="btn-secondary" style="padding:14px 24px; font-size:15px; font-weight:700;">
+            📱 Chat Qua WhatsApp / Zalo
+          </a>
         </div>
 
-        <div class="form-group">
-          <label class="form-label" data-i18n="form_hotel">Delivery Address / Hotel in Pleiku:</label>
-          <input type="text" id="bookHotel" class="form-input" placeholder="e.g. Pleiku Hotel, 03 Nguyen Du..." required>
+        <div style="margin-top:20px; font-size:12px; color:var(--text-muted); display:flex; justify-content:center; gap:20px; flex-wrap:wrap;">
+          <span>📍 Nhận tại shop: <b>197 Nguyễn Tất Thành</b></span>
+          <span>🚚 Giao tận nơi: <b>100.000đ (Khứ hồi)</b></span>
+          <span>🛡️ <b>Không giữ CCCD / Hộ chiếu</b></span>
         </div>
-
-        <div class="form-grid-2">
-          <div class="form-group">
-            <label class="form-label" data-i18n="form_days">How many days?</label>
-            <input type="number" id="bookDays" class="form-input" min="1" max="90" value="1" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" data-i18n="form_bikes">Number of bikes:</label>
-            <input type="number" id="bookBikes" class="form-input" min="1" max="10" value="1" required>
-          </div>
-        </div>
-
-        <button type="submit" class="btn-primary" style="width:100%; justify-content:center; margin-top:10px;" data-i18n="form_submit">
-          🚀 Send Booking via WhatsApp
-        </button>
-      </form>
+      </div>
     </div>
   </section>
 

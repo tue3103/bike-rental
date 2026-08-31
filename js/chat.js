@@ -36,6 +36,19 @@ function resetChat() {
   renderChatMessages();
 }
 
+function quickBookPrompt(text) {
+  if (!isChatOpen) {
+    toggleChat();
+  }
+  const input = document.getElementById('chatInput');
+  if (input) {
+    input.value = text;
+    // Auto submit
+    const fakeEvent = { preventDefault: () => {} };
+    sendChatMessage(fakeEvent);
+  }
+}
+
 function toggleChat() {
   isChatOpen = !isChatOpen;
   const win = document.getElementById('chatWindow');
