@@ -6,6 +6,8 @@ const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8539622251:AAFAY3UlPj5
 const TELEGRAM_GROUP_ID = process.env.TELEGRAM_GROUP_ID || '-1004298681574';
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://vkwesmhtexlxbvesdgan.supabase.co';
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrd2VzbWh0ZXhseGJ2ZXNkZ2FuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODE4NDI1MSwiZXhwIjoyMTAzNzYwMjUxfQ.JF4MQxJr_CqMSyaEC-Htk63eHrz3XGA9yQLJgCWP0f8';
 
 // Global memory cache across serverless warm invocations
 // In production, syncs with Telegram message threads & cache
@@ -459,12 +461,36 @@ export default async function handler(req, res) {
 // SMART AI RESPONSE GENERATOR (MULTILINGUAL + INVENTORY AWARE)
 // ==============================================================================
 async function generateAiResponse(userMessage, session, inventory) {
-  const fleet = global._bikeFleet || [];
+  let fleet = global._bikeFleet || [];
+  try {
+    const sbRes = await fetch(`${SUPABASE_URL}/rest/v1/bikes?select=*&order=id.asc`, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`
+      }
+    });
+    if (sbRes.ok) {
+      const sbData = await sbRes.json();
+      if (Array.isArray(sbData) && sbData.length > 0) {
+        fleet = sbData.map(r => ({
+          id: r.id,
+          name: r.name,
+          category: r.category,
+          priceDaily: r.price_daily,
+          priceWeekly: r.price_weekly,
+          deposit: r.deposit,
+          status: r.status,
+          gear: r.gear || ''
+        }));
+      }
+    }
+  } catch (e) {}
+
   const availableBikesList = fleet.filter(b => b.status === 'Available');
-  const availableCount = availableBikesList.length;
+  const availableCount = availableBikesList.length || fleet.length;
 
   const fleetSummary = availableBikesList.map(b => 
-    `- [${b.id}] ${b.name} (${b.category}): ${b.priceDaily.toLocaleString()} VND/day (weekly: ${b.priceWeekly.toLocaleString()} VND/day), Deposit: ${b.deposit.toLocaleString()} VND. Gear: ${b.gear || 'Standard'}`
+    `- [${b.id}] ${b.name} (${b.category}): ${(b.priceDaily || 50000).toLocaleString()} VND/day, Deposit: ${(b.deposit || 5000000).toLocaleString()} VND. Gear: ${b.gear || 'Standard'}`
   ).join('\n');
 
   const prompt = `You are the friendly, professional customer support AI for "SmileX Bike Rental" at 197 Nguyễn Tất Thành, TP. Pleiku, Gia Lai.
