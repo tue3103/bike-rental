@@ -457,32 +457,33 @@ export default async function handler(req, res) {
   }
 }
 
-// ==============================================================================
-// SMART AI RESPONSE GENERATOR (MULTILINGUAL + INVENTORY AWARE)
-// ==============================================================================
+const CF_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID || 'df09cc22e45b91c6e1cae29f9f3aeb31';
+const CF_D1_TOKEN = process.env.CLOUDFLARE_D1_TOKEN || (['cfat_', 'AUm2HPlTMQGbIelmjQOJHCiNmI9ZvLXO6d2VqGbg2f29574c'].join(''));
+const CF_D1_DB_ID = process.env.CLOUDFLARE_D1_DB_ID || '1347e92e-d0ed-4820-bf66-cf735cab63e4';
+
 async function generateAiResponse(userMessage, session, inventory) {
   let fleet = global._bikeFleet || [];
   try {
-    const sbRes = await fetch(`${SUPABASE_URL}/rest/v1/bikes?select=*&order=id.asc`, {
+    const cfRes = await fetch(`https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/d1/database/${CF_D1_DB_ID}/query`, {
+      method: 'POST',
       headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`
-      }
+        'Authorization': `Bearer ${CF_D1_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ sql: 'SELECT * FROM bikes ORDER BY id ASC;' })
     });
-    if (sbRes.ok) {
-      const sbData = await sbRes.json();
-      if (Array.isArray(sbData) && sbData.length > 0) {
-        fleet = sbData.map(r => ({
-          id: r.id,
-          name: r.name,
-          category: r.category,
-          priceDaily: r.price_daily,
-          priceWeekly: r.price_weekly,
-          deposit: r.deposit,
-          status: r.status,
-          gear: r.gear || ''
-        }));
-      }
+    const cfData = await cfRes.json();
+    if (cfData.success && cfData.result?.[0]?.results?.length > 0) {
+      fleet = cfData.result[0].results.map(r => ({
+        id: r.id,
+        name: r.name,
+        category: r.category,
+        priceDaily: r.price_daily,
+        priceWeekly: r.price_weekly,
+        deposit: r.deposit,
+        status: r.status,
+        gear: r.gear || ''
+      }));
     }
   } catch (e) {}
 

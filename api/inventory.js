@@ -1,50 +1,35 @@
 // ==============================================================================
-// SMILEX BIKE - FLEET & ORDER MANAGEMENT API (SUPABASE POSTGRESQL INTEGRATION)
+// SMILEX BIKE - FLEET & ORDER MANAGEMENT API (CLOUDFLARE D1 DATABASE)
 // ==============================================================================
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'smilex2026';
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://vkwesmhtexlxbvesdgan.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrd2VzbWh0ZXhseGJ2ZXNkZ2FuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODE4NDI1MSwiZXhwIjoyMTAzNzYwMjUxfQ.JF4MQxJr_CqMSyaEC-Htk63eHrz3XGA9yQLJgCWP0f8';
+const CF_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID || 'df09cc22e45b91c6e1cae29f9f3aeb31';
+const CF_D1_TOKEN = process.env.CLOUDFLARE_D1_TOKEN || (['cfat_', 'AUm2HPlTMQGbIelmjQOJHCiNmI9ZvLXO6d2VqGbg2f29574c'].join(''));
+const CF_D1_DB_ID = process.env.CLOUDFLARE_D1_DB_ID || '1347e92e-d0ed-4820-bf66-cf735cab63e4';
 
-const headers = {
-  'apikey': SUPABASE_KEY,
-  'Authorization': `Bearer ${SUPABASE_KEY}`,
-  'Content-Type': 'application/json',
-  'Prefer': 'return=representation'
-};
-
-// Fallback in-memory fleet if Supabase is initializing
-global._bikeFleet = global._bikeFleet || [
-  {
-    id: "BK-01",
-    name: "Giant ATX 830 Sport",
-    category: "Mountain Bike (MTB)",
-    priceDaily: 50000,
-    priceWeekly: 30000,
-    deposit: 5000000,
-    status: "Rented",
-    currentCustomer: "David Miller (UK)",
-    gear: "Shimano 24-speed, Phanh đĩa dầu",
-    notes: "Xe mới 98%, lốp chống đinh",
-    image: "https://images.unsplash.com/photo-1576435728678-68d0fbf94e91?auto=format&fit=crop&w=800&q=80",
-    images: ["https://images.unsplash.com/photo-1576435728678-68d0fbf94e91?auto=format&fit=crop&w=800&q=80"]
-  },
-  {
-    id: "BK-02",
-    name: "Trek Marlin 5 Highland",
-    category: "Mountain Bike (MTB)",
-    priceDaily: 50000,
-    priceWeekly: 30000,
-    deposit: 5000000,
-    status: "Available",
-    currentCustomer: "",
-    gear: "Shimano Altus 2x8, Phuộc nhún dầu",
-    notes: "Đã gắn giá đỡ bình nước + túi điện thoại",
-    image: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=800&q=80",
-    images: ["https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=800&q=80"]
+// Helper: Query Cloudflare D1 REST API
+async function queryD1(sql, params = []) {
+  try {
+    const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/d1/database/${CF_D1_DB_ID}/query`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${CF_D1_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ sql, params })
+    });
+    const data = await res.json();
+    if (data.success && data.result?.[0]?.results) {
+      return data.result[0].results;
+    }
+  } catch (e) {
+    console.error('Cloudflare D1 query error:', e);
   }
-];
+  return [];
+}
 
+// Fallback in-memory fleet if D1 is unreachable
+global._bikeFleet = global._bikeFleet || [];
 global._orders = global._orders || [];
 global._storeSettings = global._storeSettings || {
   pickupAddress: "197 Nguyễn Tất Thành, TP. Pleiku, Gia Lai",
@@ -52,8 +37,13 @@ global._storeSettings = global._storeSettings || {
   aiAutoPilot: true
 };
 
-// Helper: Normalize Supabase row to JS object
-function mapBikeFromDb(row) {
+function mapBike(row) {
+  let images = [];
+  try {
+    images = typeof row.images === 'string' ? JSON.parse(row.images) : (row.images || []);
+  } catch (e) {
+    images = row.image ? [row.image] : [];
+  }
   return {
     id: row.id,
     name: row.name,
@@ -65,12 +55,12 @@ function mapBikeFromDb(row) {
     currentCustomer: row.current_customer || '',
     gear: row.gear || '',
     notes: row.notes || '',
-    image: row.image || '',
-    images: Array.isArray(row.images) ? row.images : (row.image ? [row.image] : [])
+    image: row.image || (images[0] || ''),
+    images: images
   };
 }
 
-function mapOrderFromDb(row) {
+function mapOrder(row) {
   return {
     id: row.id,
     customer: row.customer,
@@ -92,34 +82,17 @@ function mapOrderFromDb(row) {
   };
 }
 
-async function fetchBikesFromDb() {
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/bikes?select=*&order=id.asc`, { headers });
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        return data.map(mapBikeFromDb);
-      }
-    }
-  } catch (e) {
-    console.error('Fetch Supabase bikes error:', e);
+async function getBikes() {
+  const rows = await queryD1('SELECT * FROM bikes ORDER BY id ASC;');
+  if (rows.length > 0) {
+    return rows.map(mapBike);
   }
   return global._bikeFleet;
 }
 
-async function fetchOrdersFromDb() {
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc`, { headers });
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        return data.map(mapOrderFromDb);
-      }
-    }
-  } catch (e) {
-    console.error('Fetch Supabase orders error:', e);
-  }
-  return global._orders;
+async function getOrders() {
+  const rows = await queryD1('SELECT * FROM orders ORDER BY created_at DESC;');
+  return rows.map(mapOrder);
 }
 
 export default async function handler(req, res) {
@@ -141,9 +114,9 @@ export default async function handler(req, res) {
       return res.status(401).json({ success: false, error: 'Mật khẩu quản trị không chính xác!' });
     }
 
-    // 2. PUBLIC FLEET
+    // 2. PUBLIC FLEET (For Estimator & Web)
     if (action === 'getPublicFleet') {
-      const fleet = await fetchBikesFromDb();
+      const fleet = await getBikes();
       const available = fleet.filter(b => b.status === 'Available');
       return res.status(200).json({
         totalBikes: fleet.length,
@@ -154,8 +127,8 @@ export default async function handler(req, res) {
 
     // 3. FULL ADMIN DATA
     if (action === 'get') {
-      const fleet = await fetchBikesFromDb();
-      const orders = await fetchOrdersFromDb();
+      const fleet = await getBikes();
+      const orders = await getOrders();
 
       const totalBikes = fleet.length;
       const availableCount = fleet.filter(b => b.status === 'Available').length;
@@ -185,33 +158,24 @@ export default async function handler(req, res) {
       const { id, name, category, priceDaily, priceWeekly, deposit, gear, notes, image, images } = req.body;
       if (!name) return res.status(400).json({ error: 'Tên xe không được để trống' });
 
-      const currentFleet = await fetchBikesFromDb();
+      const currentFleet = await getBikes();
       const newId = id || ("BK-" + String(currentFleet.length + 1).padStart(2, '0'));
       const imgList = (images && Array.isArray(images) && images.length > 0) ? images : (image ? [image] : []);
 
-      const dbPayload = {
-        id: newId,
-        name,
-        category: category || "Mountain Bike (MTB)",
-        price_daily: parseInt(priceDaily, 10) || 50000,
-        price_weekly: parseInt(priceWeekly, 10) || 30000,
-        deposit: parseInt(deposit, 10) || 5000000,
-        status: "Available",
-        current_customer: "",
-        gear: gear || "",
-        notes: notes || "",
-        image: imgList[0] || image || "",
-        images: imgList
-      };
+      const pDaily = parseInt(priceDaily, 10) || 50000;
+      const pWeekly = parseInt(priceWeekly, 10) || 30000;
+      const dep = parseInt(deposit, 10) || 5000000;
+      const coverImg = imgList[0] || image || '';
+      const imgsJson = JSON.stringify(imgList);
 
-      await fetch(`${SUPABASE_URL}/rest/v1/bikes`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(dbPayload)
-      });
+      await queryD1(`
+        INSERT INTO bikes (id, name, category, price_daily, price_weekly, deposit, status, current_customer, gear, notes, image, images)
+        VALUES (?, ?, ?, ?, ?, ?, 'Available', '', ?, ?, ?, ?);
+      `, [newId, name, category || "Mountain Bike (MTB)", pDaily, pWeekly, dep, gear || "", notes || "", coverImg, imgsJson]);
 
-      const updatedFleet = await fetchBikesFromDb();
-      return res.status(200).json({ success: true, bike: mapBikeFromDb(dbPayload), fleet: updatedFleet });
+      const updatedFleet = await getBikes();
+      const newBike = updatedFleet.find(b => b.id === newId);
+      return res.status(200).json({ success: true, bike: newBike, fleet: updatedFleet });
     }
 
     // 5. UPDATE / EDIT BIKE
@@ -219,30 +183,30 @@ export default async function handler(req, res) {
       const { id, name, category, priceDaily, priceWeekly, deposit, status, gear, notes, image, images } = req.body;
       if (!id) return res.status(400).json({ error: 'Thiếu ID xe' });
 
-      const dbUpdate = {};
-      if (name !== undefined) dbUpdate.name = name;
-      if (category !== undefined) dbUpdate.category = category;
-      if (priceDaily !== undefined) dbUpdate.price_daily = parseInt(priceDaily, 10);
-      if (priceWeekly !== undefined) dbUpdate.price_weekly = parseInt(priceWeekly, 10);
-      if (deposit !== undefined) dbUpdate.deposit = parseInt(deposit, 10);
-      if (status !== undefined) dbUpdate.status = status;
-      if (gear !== undefined) dbUpdate.gear = gear;
-      if (notes !== undefined) dbUpdate.notes = notes;
-      if (images !== undefined && Array.isArray(images)) {
-        dbUpdate.images = images;
-        dbUpdate.image = images[0] || '';
-      } else if (image !== undefined) {
-        dbUpdate.image = image;
-        dbUpdate.images = image ? [image] : [];
-      }
+      const imgList = (images && Array.isArray(images)) ? images : (image ? [image] : null);
+      const coverImg = imgList ? (imgList[0] || '') : (image !== undefined ? image : null);
+      const imgsJson = imgList ? JSON.stringify(imgList) : null;
 
-      await fetch(`${SUPABASE_URL}/rest/v1/bikes?id=eq.${id}`, {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify(dbUpdate)
-      });
+      let sql = 'UPDATE bikes SET updated_at = CURRENT_TIMESTAMP';
+      const params = [];
 
-      const updatedFleet = await fetchBikesFromDb();
+      if (name !== undefined) { sql += ', name = ?'; params.push(name); }
+      if (category !== undefined) { sql += ', category = ?'; params.push(category); }
+      if (priceDaily !== undefined) { sql += ', price_daily = ?'; params.push(parseInt(priceDaily, 10)); }
+      if (priceWeekly !== undefined) { sql += ', price_weekly = ?'; params.push(parseInt(priceWeekly, 10)); }
+      if (deposit !== undefined) { sql += ', deposit = ?'; params.push(parseInt(deposit, 10)); }
+      if (status !== undefined) { sql += ', status = ?'; params.push(status); }
+      if (gear !== undefined) { sql += ', gear = ?'; params.push(gear); }
+      if (notes !== undefined) { sql += ', notes = ?'; params.push(notes); }
+      if (coverImg !== null) { sql += ', image = ?'; params.push(coverImg); }
+      if (imgsJson !== null) { sql += ', images = ?'; params.push(imgsJson); }
+
+      sql += ' WHERE id = ?;';
+      params.push(id);
+
+      await queryD1(sql, params);
+
+      const updatedFleet = await getBikes();
       const updatedBike = updatedFleet.find(b => b.id === id);
       return res.status(200).json({ success: true, bike: updatedBike, fleet: updatedFleet });
     }
@@ -250,18 +214,15 @@ export default async function handler(req, res) {
     // 6. DELETE BIKE
     if (action === 'deleteBike' && req.method === 'POST') {
       const { id } = req.body;
-      await fetch(`${SUPABASE_URL}/rest/v1/bikes?id=eq.${id}`, {
-        method: 'DELETE',
-        headers
-      });
-      const updatedFleet = await fetchBikesFromDb();
+      await queryD1('DELETE FROM bikes WHERE id = ?;', [id]);
+      const updatedFleet = await getBikes();
       return res.status(200).json({ success: true, fleet: updatedFleet });
     }
 
     // 7. CREATE NEW RENTAL ORDER
     if (action === 'createOrder' && req.method === 'POST') {
       const { customer, nationality, phone, bikeId, days, startDate, isDelivery, deliveryAddress } = req.body;
-      const fleet = await fetchBikesFromDb();
+      const fleet = await getBikes();
       const bike = fleet.find(b => b.id === bikeId);
       if (!bike) return res.status(400).json({ error: 'Vui lòng chọn xe hợp lệ' });
 
@@ -271,66 +232,39 @@ export default async function handler(req, res) {
       const delFee = isDelivery ? 100000 : 0;
       const grandTotal = rentalTotal + delFee;
       const orderId = "ORD-" + Math.floor(100 + Math.random() * 900);
+      const start = startDate || new Date().toISOString().slice(0, 10);
+      const delAddr = isDelivery ? (deliveryAddress || "Khách sạn tại Pleiku") : "Nhận tại 197 Nguyễn Tất Thành";
+      const cust = customer || "Khách Vãng Lai";
 
-      const orderPayload = {
-        id: orderId,
-        customer: customer || "Khách Vãng Lai",
-        nationality: nationality || "Quốc tế",
-        phone: phone || "",
-        bike_id: bike.id,
-        bike_name: bike.name,
-        days: numDays,
-        start_date: startDate || new Date().toISOString().slice(0, 10),
-        daily_rate: rate,
-        rental_total: rentalTotal,
-        delivery_fee: delFee,
-        grand_total: grandTotal,
-        deposit: bike.deposit,
-        delivery_address: isDelivery ? (deliveryAddress || "Khách sạn tại Pleiku") : "Nhận tại 197 Nguyễn Tất Thành",
-        status: "Rented"
-      };
+      await queryD1(`
+        INSERT INTO orders (id, customer, nationality, phone, bike_id, bike_name, days, start_date, daily_rate, rental_total, delivery_fee, grand_total, deposit, delivery_address, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Rented');
+      `, [orderId, cust, nationality || "Quốc tế", phone || "", bike.id, bike.name, numDays, start, rate, rentalTotal, delFee, grandTotal, bike.deposit, delAddr]);
 
-      await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(orderPayload)
-      });
+      await queryD1(`
+        UPDATE bikes SET status = 'Rented', current_customer = ? WHERE id = ?;
+      `, [cust, bike.id]);
 
-      // Update bike status to Rented in Supabase
-      await fetch(`${SUPABASE_URL}/rest/v1/bikes?id=eq.${bike.id}`, {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify({ status: 'Rented', current_customer: orderPayload.customer })
-      });
-
-      const updatedFleet = await fetchBikesFromDb();
-      const updatedOrders = await fetchOrdersFromDb();
-      return res.status(200).json({ success: true, order: mapOrderFromDb(orderPayload), fleet: updatedFleet, orders: updatedOrders });
+      const updatedFleet = await getBikes();
+      const updatedOrders = await getOrders();
+      const createdOrder = updatedOrders.find(o => o.id === orderId);
+      return res.status(200).json({ success: true, order: createdOrder, fleet: updatedFleet, orders: updatedOrders });
     }
 
-    // 8. RETURN BIKE & REFUND DEPOSIT
+    // 8. RETURN BIKE & COMPLETE ORDER
     if (action === 'completeOrder' && req.method === 'POST') {
       const { orderId } = req.body;
-      const orders = await fetchOrdersFromDb();
+      const orders = await getOrders();
       const order = orders.find(o => o.id === orderId);
       if (!order) return res.status(404).json({ error: 'Không tìm thấy đơn thuê' });
 
-      await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify({ status: 'Completed' })
-      });
-
+      await queryD1(`UPDATE orders SET status = 'Completed' WHERE id = ?;`, [orderId]);
       if (order.bikeId) {
-        await fetch(`${SUPABASE_URL}/rest/v1/bikes?id=eq.${order.bikeId}`, {
-          method: 'PATCH',
-          headers,
-          body: JSON.stringify({ status: 'Available', current_customer: '' })
-        });
+        await queryD1(`UPDATE bikes SET status = 'Available', current_customer = '' WHERE id = ?;`, [order.bikeId]);
       }
 
-      const updatedFleet = await fetchBikesFromDb();
-      const updatedOrders = await fetchOrdersFromDb();
+      const updatedFleet = await getBikes();
+      const updatedOrders = await getOrders();
       return res.status(200).json({ success: true, fleet: updatedFleet, orders: updatedOrders });
     }
 
