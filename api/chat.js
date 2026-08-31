@@ -4,6 +4,7 @@
 
 const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8539622251:AAFAY3UlPj5X--2sjGwv0EtsxKUxF9GSLiU';
 const TELEGRAM_GROUP_ID = process.env.TELEGRAM_GROUP_ID || '-1004298681574';
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 // Global memory cache across serverless warm invocations
@@ -221,7 +222,49 @@ Instructions:
 2. Keep the answer concise, polite, friendly, and helpful (2-4 sentences).
 3. If they want to reserve, tell them they can fill the form or send dates/hotel address right here in chat and we will prepare the bike immediately.`;
 
-  // 1. Try Gemini API if key is present
+  // 1. Try Groq API (Qwen 3.8 27B / Qwen 3.6 27B)
+  if (GROQ_API_KEY) {
+    try {
+      const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + GROQ_API_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'qwen/qwen3.8-27b',
+          messages: [
+            {
+              role: 'system',
+              content: `You are the friendly, multilingual AI customer support for "SmileX Bike Rental" at 197 Nguyễn Tất Thành, TP. Pleiku, Gia Lai.
+Current Store Info:
+- Available Sport Bikes: ${availableBikes} bikes in stock.
+- Rates: 50,000 VND/day (~$2 USD), Weekly (>7 days) is 30,000 VND/day (~$1.20 USD).
+- Security Deposit: 5,000,000 VND (~$200 USD), 100% refunded upon bike return.
+- NO PASSPORT/ID HELD. 5-minute fast handover.
+- Delivery: 100,000 VND flat round-trip delivery to hotel/homestay in Pleiku. Store pickup at 197 Nguyễn Tất Thành is FREE.
+- Free gear: Helmet, lock, phone mount, mini pump, bottle cage.
+- Scenic spots: Sea Lake (Biển Hồ - 8km), Century Pines & Tea Hills (12km), Chư Đăng Ya Volcano (22km).
+
+Rules:
+1. Always reply in the EXACT SAME LANGUAGE the customer uses (English, French, Vietnamese, Korean, etc.).
+2. Keep replies natural, concise (2-3 sentences), warm, and helpful.`
+            },
+            { role: 'user', content: userMessage }
+          ],
+          temperature: 0.6,
+          max_tokens: 220
+        })
+      });
+      const groqData = await groqRes.json();
+      const groqText = groqData.choices?.[0]?.message?.content;
+      if (groqText) return groqText.trim();
+    } catch (e) {
+      console.error('Groq API Error:', e);
+    }
+  }
+
+  // 2. Try Gemini API if key is present
   if (GEMINI_API_KEY && GEMINI_API_KEY !== 'AIzaSyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx') {
     try {
       const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
@@ -239,7 +282,7 @@ Instructions:
     }
   }
 
-  // 2. Built-in Smart Intelligent Fallback
+  // 3. Built-in Smart Intelligent Fallback
   const lower = userMessage.toLowerCase();
 
   // English greetings & availability
