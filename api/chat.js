@@ -287,16 +287,34 @@ export default async function handler(req, res) {
       const session = store[sessionId] || global._sessionStore.get(sessionId);
 
       let messages = session ? [...(session.messages || [])] : [];
-
-      // Check topic message queue
       const activeTopicId = topicId || (session ? session.topicId : null);
+
+      // Query Telegram getUpdates directly for real-time admin replies
       if (activeTopicId) {
-        const topicQueue = store['topic_' + String(activeTopicId)] || [];
-        topicQueue.forEach(adminMsg => {
-          if (!messages.some(m => m.text === adminMsg.text && m.sender === 'admin')) {
-            messages.push(adminMsg);
+        try {
+          const tgRes = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/getUpdates?allowed_updates=["message"]`);
+          if (tgRes.ok) {
+            const tgData = await tgRes.json();
+            if (tgData.ok && tgData.result && tgData.result.length > 0) {
+              tgData.result.forEach(u => {
+                const m = u.message;
+                if (m && !m.from?.is_bot && String(m.message_thread_id) === String(activeTopicId) && m.text) {
+                  const adminMsg = {
+                    sender: 'admin',
+                    text: m.text,
+                    author: m.from?.first_name || 'Admin',
+                    time: new Date((m.date || Date.now() / 1000) * 1000).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+                  };
+                  if (!messages.some(ex => ex.text === adminMsg.text && ex.sender === 'admin')) {
+                    messages.push(adminMsg);
+                  }
+                }
+              });
+            }
           }
-        });
+        } catch (e) {
+          console.error('getUpdates error:', e);
+        }
       }
 
       return res.status(200).json({
