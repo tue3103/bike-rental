@@ -85,6 +85,16 @@ function renderStats(stats, settings) {
   if (aiToggle && settings) aiToggle.checked = !!settings.aiAutoPilot;
 }
 
+let currentBikeImageBase64 = '';
+
+const DEFAULT_BIKE_IMAGES = {
+  "Mountain Bike (MTB)": "https://images.unsplash.com/photo-1576435728678-68d0fbf94e91?w=600&auto=format&fit=crop&q=80",
+  "Touring Road Bike": "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600&auto=format&fit=crop&q=80",
+  "City Bike (Xe nữ)": "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=600&auto=format&fit=crop&q=80",
+  "Premium Carbon MTB": "https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?w=600&auto=format&fit=crop&q=80",
+  "E-Bike (Trợ lực điện)": "https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=600&auto=format&fit=crop&q=80"
+};
+
 function renderFleet(fleet) {
   const container = document.getElementById('fleetGrid');
   if (!container) return;
@@ -97,10 +107,16 @@ function renderFleet(fleet) {
   container.innerHTML = fleet.map(b => {
     let badgeClass = b.status === 'Available' ? 'available' : (b.status === 'Rented' ? 'rented' : 'maintenance');
     let badgeText = b.status === 'Available' ? '🟢 Sẵn Sàng Cho Thuê' : (b.status === 'Rented' ? `🔴 Đang Thuê: ${b.currentCustomer || 'Khách'}` : '🟡 Đang Bảo Dưỡng');
+    let imgUrl = b.image || DEFAULT_BIKE_IMAGES[b.category] || DEFAULT_BIKE_IMAGES["Mountain Bike (MTB)"];
 
     return `
       <div class="bike-card">
         <div>
+          <!-- BIKE PHOTO -->
+          <div class="bike-img-wrap">
+            <img src="${imgUrl}" alt="${b.name}" class="bike-img" loading="lazy">
+          </div>
+
           <div class="bike-header">
             <div>
               <span class="bike-id">${b.id}</span>
@@ -145,53 +161,69 @@ function renderFleet(fleet) {
   }).join('');
 }
 
-function renderOrders(orders) {
-  const tbody = document.getElementById('ordersTbody');
-  if (!tbody) return;
+// IMAGE UPLOAD & PREVIEW HANDLERS
+function handleBikeImageFileSelect(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
 
-  if (orders.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:24px; color:var(--text-muted);">Chưa có đơn thuê nào. Bấm "+ Tạo Đơn Thuê Xe" để thêm khách.</td></tr>`;
-    return;
-  }
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    // Compress image to max width 800px
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX_WIDTH = 800;
+      let width = img.width;
+      let height = img.height;
 
-  tbody.innerHTML = orders.map(o => `
-    <tr>
-      <td><b>${o.id}</b><br><small style="color:var(--text-muted);">${o.createdAt || ''}</small></td>
-      <td>
-        <b>${o.customer}</b> <small style="color:var(--text-muted);">(${o.nationality || 'Quốc tế'})</small><br>
-        <span style="color:var(--primary); font-size:12px;">📞 ${o.phone}</span>
-      </td>
-      <td>
-        <span class="bike-id" style="font-size:11px;">${o.bikeId}</span> <b>${o.bikeName}</b><br>
-        <small style="color:var(--text-muted);">Thuê ${o.days} ngày (từ ${o.startDate})</small>
-      </td>
-      <td>
-        <b>${(o.grandTotal || 0).toLocaleString()} đ</b><br>
-        <small style="color:var(--text-muted);">${o.deliveryFee > 0 ? '+100k ship' : 'Nhận tại shop'}</small>
-      </td>
-      <td><span style="color:var(--accent-gold); font-weight:800;">${(o.deposit || 0).toLocaleString()} đ</span></td>
-      <td><small style="color:#cbd5e1;">${o.deliveryAddress || '197 Nguyễn Tất Thành'}</small></td>
-      <td>
-        <span class="badge ${o.status === 'Rented' ? 'rented' : 'available'}">
-          ${o.status === 'Rented' ? '🔴 Đang Thuê' : '✅ Đã Hoàn Tất'}
-        </span>
-      </td>
-      <td>
-        ${o.status === 'Rented' ? `
-          <button class="btn btn-primary" style="padding:4px 10px; font-size:11px;" onclick="completeOrder('${o.id}')">
-            ✅ Trả Xe & Hoàn Cọc
-          </button>
-        ` : '<span style="color:var(--text-muted); font-size:12px;">Đã xong</span>'}
-      </td>
-    </tr>
-  `).join('');
+      if (width > MAX_WIDTH) {
+        height = Math.round((height * MAX_WIDTH) / width);
+        width = MAX_WIDTH;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      currentBikeImageBase64 = canvas.toDataURL('image/jpeg', 0.85);
+      showImagePreview(currentBikeImageBase64);
+    };
+    img.src = event.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
-// 3. BIKE CRUD OPERATIONS
+function onBikeImageUrlChange(val) {
+  const url = val.trim();
+  if (url) {
+    currentBikeImageBase64 = url;
+    showImagePreview(url);
+  }
+}
+
+function showImagePreview(src) {
+  const box = document.getElementById('bikeImgPreviewBox');
+  const img = document.getElementById('bikeImgPreview');
+  if (box && img) {
+    img.src = src;
+    box.style.display = 'block';
+  }
+}
+
+function removeBikeImage() {
+  currentBikeImageBase64 = '';
+  document.getElementById('bikeImageUrlInput').value = '';
+  document.getElementById('bikeImageFileInput').value = '';
+  const box = document.getElementById('bikeImgPreviewBox');
+  if (box) box.style.display = 'none';
+}
+
 function openAddBikeModal() {
   document.getElementById('modalBikeTitle').innerText = '🚲 Thêm Xe Mới Vào Kho';
   document.getElementById('bikeForm').reset();
   document.getElementById('bikeIdInput').value = '';
+  removeBikeImage();
   document.getElementById('bikeModal').classList.add('open');
 }
 
@@ -209,6 +241,14 @@ function openEditBikeModal(bikeId) {
   document.getElementById('bikeDepositInput').value = bike.deposit;
   document.getElementById('bikeGearInput').value = bike.gear || '';
   document.getElementById('bikeNotesInput').value = bike.notes || '';
+
+  if (bike.image) {
+    currentBikeImageBase64 = bike.image;
+    document.getElementById('bikeImageUrlInput').value = bike.image.startsWith('http') ? bike.image : '';
+    showImagePreview(bike.image);
+  } else {
+    removeBikeImage();
+  }
 
   document.getElementById('bikeModal').classList.add('open');
 }
@@ -228,6 +268,7 @@ async function handleSaveBike(e) {
   const deposit = document.getElementById('bikeDepositInput').value;
   const gear = document.getElementById('bikeGearInput').value.trim();
   const notes = document.getElementById('bikeNotesInput').value.trim();
+  const image = currentBikeImageBase64;
 
   const isEdit = !!id;
   const action = isEdit ? 'updateBike' : 'addBike';
@@ -244,7 +285,8 @@ async function handleSaveBike(e) {
         priceWeekly,
         deposit,
         gear,
-        notes
+        notes,
+        image
       })
     });
     const data = await res.json();
