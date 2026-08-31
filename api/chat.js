@@ -6,8 +6,6 @@ const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8539622251:AAFAY3UlPj5
 const TELEGRAM_GROUP_ID = process.env.TELEGRAM_GROUP_ID || '-1004298681574';
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://vkwesmhtexlxbvesdgan.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrd2VzbWh0ZXhseGJ2ZXNkZ2FuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODE4NDI1MSwiZXhwIjoyMTAzNzYwMjUxfQ.JF4MQxJr_CqMSyaEC-Htk63eHrz3XGA9yQLJgCWP0f8';
 
 // Global memory cache across serverless warm invocations
 // In production, syncs with Telegram message threads & cache
