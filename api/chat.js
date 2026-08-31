@@ -12,7 +12,80 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 global._sessionStore = global._sessionStore || new Map();
 // Structure: sessionId -> { topicId, name, phone, messages: [{ sender: 'user'|'admin'|'ai', text, time }] }
 global._topicToSession = global._topicToSession || new Map();
-// Structure: topicId -> sessionId
+global._bikeFleet = global._bikeFleet || [
+  {
+    id: "BK-01",
+    name: "Giant ATX 830 Sport",
+    category: "Mountain Bike (MTB)",
+    priceDaily: 50000,
+    priceWeekly: 30000,
+    deposit: 5000000,
+    status: "Available",
+    currentCustomer: "",
+    gear: "Shimano 24-speed, Phanh đĩa dầu",
+    notes: "Xe mới 98%, lốp chống đinh"
+  },
+  {
+    id: "BK-02",
+    name: "Trek Marlin 5 Highland",
+    category: "Mountain Bike (MTB)",
+    priceDaily: 50000,
+    priceWeekly: 30000,
+    deposit: 5000000,
+    status: "Available",
+    currentCustomer: "",
+    gear: "Shimano Altus 2x8, Phuộc nhún dầu",
+    notes: "Đã gắn giá đỡ bình nước + túi điện thoại"
+  },
+  {
+    id: "BK-03",
+    name: "Trinx M100 Pro Elite",
+    category: "Mountain Bike (MTB)",
+    priceDaily: 50000,
+    priceWeekly: 30000,
+    deposit: 5000000,
+    status: "Available",
+    currentCustomer: "",
+    gear: "Shimano 21-speed",
+    notes: "Phù hợp chiều cao 1m60 - 1m75"
+  },
+  {
+    id: "BK-04",
+    name: "Giant Escape 2 City Touring",
+    category: "Touring Road Bike",
+    priceDaily: 70000,
+    priceWeekly: 45000,
+    deposit: 6000000,
+    status: "Available",
+    currentCustomer: "",
+    gear: "Shimano Tourney 3x7, Bánh 700c lướt nhanh",
+    notes: "Chuyên phượt đường dài đồi dốc Biển Hồ Chè"
+  },
+  {
+    id: "BK-05",
+    name: "Sava Deck 300 Carbon Pro",
+    category: "Premium Carbon MTB",
+    priceDaily: 100000,
+    priceWeekly: 70000,
+    deposit: 10000000,
+    status: "Available",
+    currentCustomer: "",
+    gear: "Khung Carbon siêu nhẹ, Shimano Deore 30S",
+    notes: "Dòng cao cấp phượt núi lửa Chư Đăng Ya"
+  },
+  {
+    id: "BK-06",
+    name: "Asama Rainbow Lady City",
+    category: "City Bike (Xe nữ)",
+    priceDaily: 40000,
+    priceWeekly: 25000,
+    deposit: 3000000,
+    status: "Available",
+    currentCustomer: "",
+    gear: "Giỏ xe xinh xắn, yên êm, 1 đĩa 6 líp",
+    notes: "Dạo phố ẩm thực Pleiku & công viên Diệp Kính"
+  }
+];
 
 global._inventory = global._inventory || {
   totalBikes: 15,
@@ -428,13 +501,22 @@ Instructions:
           messages: [
             {
               role: 'system',
-              content: `You are the friendly, multilingual AI customer support for "SmileX Bike Rental" at 197 Nguyễn Tất Thành, TP. Pleiku, Gia Lai.
-Current Store Fleet Available (${availableCount} bikes):
-${fleetSummary || '- Mountain bikes available (50k/day, 5M deposit)'}
+              content: `You are the friendly, multilingual AI customer support for "SmileX Bike Rental" in Pleiku, Gia Lai (Store: 197 Nguyễn Tất Thành).
+We ALWAYS have high-quality bikes available in stock!
+
+Current Ready Fleet (${availableCount} bikes in stock):
+${fleetSummary}
+
+Key Store Highlights:
+- Daily Rate: 50,000 VND/day (~$2 USD), Weekly (>7 days): 30,000 VND/day (~$1.20 USD).
+- Deposit: 5,000,000 VND (100% refunded when returned). NO PASSPORT OR ID HELD!
+- Free Accessories: Helmet, cable lock, phone mount, mini pump included.
+- Fast Delivery: 100,000 VND round-trip to any hotel in Pleiku, or free pickup at 197 Nguyễn Tất Thành.
 
 Rules:
-1. Always reply in the EXACT SAME LANGUAGE the customer uses (English, French, Vietnamese, Korean, etc.).
-2. Keep replies natural, concise (2-3 sentences), warm, and helpful.`
+1. Always reply in the EXACT SAME LANGUAGE the customer speaks.
+2. If customer asks to rent or says "i want one", enthusiastically confirm we have bikes ready, recommend popular models like Trek Marlin 5 / Giant ATX, and ask when they would like pickup or delivery to their hotel.
+3. Keep replies natural, concise (2-3 sentences), warm, and helpful.`
             },
             { role: 'user', content: userMessage }
           ],
