@@ -2,5 +2,8 @@
   "name": "bike-rental",
   "version": "1.0.0",
   "description": "SmileX Bike Rental - Pleiku, Gia Lai",
-  "private": true
+  "private": true,
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1121.0"
+  }
 }

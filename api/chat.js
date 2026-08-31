@@ -177,6 +177,48 @@ export default async function handler(req, res) {
     }
 
     // ------------------------------------------------------------------------
+    // ACTION: TELEGRAM WEBHOOK (Receives Admin replies from Telegram Topics)
+    // ------------------------------------------------------------------------
+    if (action === 'webhook' || (req.body && req.body.message)) {
+      const msg = req.body && req.body.message;
+      if (msg && msg.text) {
+        const threadId = msg.message_thread_id;
+        const text = msg.text;
+        const fromBot = msg.from?.is_bot;
+
+        if (!fromBot && threadId) {
+          let sessionId = global._topicToSession.get(String(threadId));
+          
+          // Fallback search across all sessions
+          if (!sessionId) {
+            for (const [sId, sess] of global._sessionStore.entries()) {
+              if (sess.topicId === threadId) {
+                sessionId = sId;
+                global._topicToSession.set(String(threadId), sId);
+                break;
+              }
+            }
+          }
+
+          if (sessionId) {
+            const session = global._sessionStore.get(sessionId);
+            if (session) {
+              const adminMsg = {
+                sender: 'admin',
+                text: text,
+                author: msg.from?.first_name || 'Admin',
+                time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+              };
+              session.messages.push(adminMsg);
+              console.log(`[Admin -> Web Guest ${sessionId}]:`, text);
+            }
+          }
+        }
+      }
+      return res.status(200).json({ ok: true });
+    }
+
+    // ------------------------------------------------------------------------
     // ACTION: POLL / GET MESSAGES (For Web Client Realtime Updates)
     // ------------------------------------------------------------------------
     if (action === 'poll' || action === 'get') {
