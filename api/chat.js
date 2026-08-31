@@ -98,12 +98,12 @@ export default async function handler(req, res) {
     // ACTION: SEND MESSAGE (From Web Client)
     // ------------------------------------------------------------------------
     if (action === 'send' && req.method === 'POST') {
-      const { sessionId, topicId: clientTopicId, message, name, phone, hotel } = req.body;
+      const { sessionId, topicId: clientTopicId, message, history, name, phone, hotel } = req.body;
       if (!sessionId || !message) {
         return res.status(400).json({ error: 'Missing sessionId or message' });
       }
 
-      let session = store[sessionId] || {
+      let session = store[sessionId] || global._sessionStore.get(sessionId) || {
         sessionId,
         name: name || 'Traveler #' + sessionId.slice(-4),
         phone: phone || '',
@@ -118,6 +118,11 @@ export default async function handler(req, res) {
       }
       if (!session.topicId && global._sessionStore.has(sessionId)) {
         session.topicId = global._sessionStore.get(sessionId)?.topicId || null;
+      }
+
+      // Preserve previous conversation history from client if server instance was cold started
+      if (history && Array.isArray(history) && history.length > session.messages.length) {
+        session.messages = [...history];
       }
 
       // Add user message

@@ -92,6 +92,7 @@ async function sendChatMessage(e) {
         sessionId: chatSessionId,
         topicId: chatTopicId ? parseInt(chatTopicId, 10) : null,
         message: text,
+        history: localMessages.slice(0, -1),
         name: localStorage.getItem('smilex_guest_name') || ''
       })
     });
