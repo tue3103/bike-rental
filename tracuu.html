@@ -406,7 +406,29 @@
       noResult.style.display = 'none';
       card.style.display = 'block';
 
-      const days = found.days || 1;
+      // Calculate dynamic days based on current date
+      let days = found.days || 1;
+      let isLiveCalculation = false;
+
+      if (found.status === 'Rented' && found.startDate) {
+        try {
+          const parts = found.startDate.split(/[-/]/);
+          let startObj = new Date();
+          if (parts.length === 3) {
+            // Check format DD/MM/YYYY or YYYY-MM-DD
+            if (parts[0].length === 4) {
+              startObj = new Date(parts[0], parts[1] - 1, parts[2]);
+            } else {
+              startObj = new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+            const diffTime = Math.abs(new Date() - startObj);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            days = Math.max(1, diffDays);
+            isLiveCalculation = true;
+          }
+        } catch (e) {}
+      }
+
       const bikes = found.bikes || 1;
       const deposit = found.deposit || (bikes * 5000000);
       const rate = days > 7 ? 30000 : 50000;
@@ -419,13 +441,13 @@
       document.getElementById('orderCustomer').innerText = found.customer || 'Quý khách';
       document.getElementById('orderPhone').innerText = found.phone || '-';
       document.getElementById('orderStartDate').innerText = found.startDate || new Date().toLocaleDateString('vi-VN');
-      document.getElementById('orderDays').innerText = `${days} ngày`;
+      document.getElementById('orderDays').innerText = `${days} ngày ${isLiveCalculation ? '(Tính đến hôm nay)' : ''}`;
       document.getElementById('orderLocation').innerText = found.hotelAddress || found.deliveryAddress || '197 Nguyễn Tất Thành, TP. Pleiku';
       document.getElementById('orderBikeName').innerText = found.bikeName || found.bikeType || 'Xe đạp thể thao';
       document.getElementById('orderBikeDetail').innerText = `Mã xe: ${found.bikeId || 'BK-02'} • Số lượng: ${bikes} xe`;
 
       document.getElementById('orderDeposit').innerText = `${deposit.toLocaleString()} đ`;
-      document.getElementById('orderRentalCost').innerText = `- ${rentalCost.toLocaleString()} đ`;
+      document.getElementById('orderRentalCost').innerText = `- ${rentalCost.toLocaleString()} đ (${days} ngày${days > 7 ? ' - Giá tuần' : ''})`;
       document.getElementById('orderRefund').innerText = `${refund.toLocaleString()} đ`;
 
       const badge = document.getElementById('orderStatusBadge');
@@ -434,7 +456,7 @@
         badge.innerText = '⏳ Đang Chờ Lễ Tân Duyệt';
       } else if (found.status === 'Rented') {
         badge.className = 'badge-status badge-rented';
-        badge.innerText = '🟢 Đang Thuê Xe';
+        badge.innerText = '🟢 Đang Thuê Xe (Tự Động Tính Phí)';
       } else if (found.status === 'Completed') {
         badge.className = 'badge-status badge-completed';
         badge.innerText = '✅ Đã Trả Xe & Hoàn Cọc';
