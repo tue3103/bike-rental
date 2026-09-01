@@ -106,7 +106,7 @@
           <div class="panel-title">
             <span>💳</span> Cấu Hình Thông Tin Thanh Toán & Ngân Hàng (Tự Tạo Mã VietQR)
           </div>
-          <button class="btn btn-primary" onclick="handleSavePaymentSettings(event)">
+          <button type="button" class="btn btn-primary btn-save-payment" onclick="handleSavePaymentSettings(event)">
             <span>💾</span> Lưu Cấu Hình Thanh Toán
           </button>
         </div>
@@ -154,13 +154,17 @@
           </div>
 
           <!-- LIVE QR PREVIEW -->
-          <div style="background:rgba(255,255,255,0.03); border:1px dashed rgba(255,255,255,0.1); border-radius:14px; padding:14px; display:flex; align-items:center; gap:20px; flex-wrap:wrap; margin-top:10px;">
+          <div style="background:rgba(255,255,255,0.03); border:1px dashed rgba(255,255,255,0.1); border-radius:14px; padding:14px; display:flex; align-items:center; gap:20px; flex-wrap:wrap; margin-top:10px; margin-bottom:14px;">
             <img id="qrPreviewImg" src="" alt="Mã VietQR mẫu" style="width:110px; height:110px; border-radius:8px; background:#fff; object-fit:contain; display:none;">
             <div style="flex:1;">
               <div style="font-size:13px; font-weight:700; color:#fff;" id="qrPreviewTitle">Mẫu Mã QR VietQR Tự Động</div>
               <div style="font-size:12px; color:var(--text-muted); margin-top:4px;" id="qrPreviewDesc">Khi khách đặt xe, hệ thống sẽ tự sinh mã QR VietQR đúng số tiền đơn hàng để khách quét trả tiền ngay.</div>
             </div>
           </div>
+
+          <button type="submit" class="btn btn-primary btn-save-payment" style="width:100%; justify-content:center; padding:12px; font-weight:800;">
+            <span>💾</span> Lưu Cấu Hình Thanh Toán & Cập Nhật Mã QR
+          </button>
         </form>
       </div>
 

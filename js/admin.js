@@ -653,8 +653,20 @@ async function completeOrder(orderId) {
 }
 
 // 5. PAYMENT & STORE SETTINGS
+let isPaymentFormInitialized = false;
+
 function renderPaymentSettings(settings) {
   if (!settings) return;
+  const form = document.getElementById('paymentSettingsForm');
+  // If user is currently focused or typing in the payment form, DO NOT overwrite!
+  if (form && document.activeElement && form.contains(document.activeElement)) {
+    return;
+  }
+  // If form was already initialized once and user might have edited, don't overwrite during background polling
+  if (isPaymentFormInitialized && document.activeElement !== document.body) {
+    return;
+  }
+
   const bankSelect = document.getElementById('settingBankSelect');
   const accNo = document.getElementById('settingAccountNo');
   const accName = document.getElementById('settingAccountName');
@@ -669,11 +681,12 @@ function renderPaymentSettings(settings) {
       }
     }
   }
-  if (accNo && settings.accountNo) accNo.value = settings.accountNo;
-  if (accName && settings.accountName) accName.value = settings.accountName;
-  if (intl && settings.intlPaymentInfo) intl.value = settings.intlPaymentInfo;
-  if (policy && settings.advancePaymentPolicy) policy.value = settings.advancePaymentPolicy;
+  if (accNo && settings.accountNo !== undefined) accNo.value = settings.accountNo;
+  if (accName && settings.accountName !== undefined) accName.value = settings.accountName;
+  if (intl && settings.intlPaymentInfo !== undefined) intl.value = settings.intlPaymentInfo;
+  if (policy && settings.advancePaymentPolicy !== undefined) policy.value = settings.advancePaymentPolicy;
 
+  isPaymentFormInitialized = true;
   updateQrPreview();
 }
 
@@ -698,6 +711,9 @@ function updateQrPreview() {
 
 async function handleSavePaymentSettings(e) {
   if (e) e.preventDefault();
+  const saveBtns = document.querySelectorAll('.btn-save-payment');
+  saveBtns.forEach(b => { b.innerText = '⏳ Đang lưu...'; b.disabled = true; });
+
   const bankVal = document.getElementById('settingBankSelect')?.value || 'MBBank|970422';
   const [bankName, bankBin] = bankVal.split('|');
   const accountNo = document.getElementById('settingAccountNo')?.value.trim();
@@ -720,7 +736,8 @@ async function handleSavePaymentSettings(e) {
     });
     const data = await res.json();
     if (data.success) {
-      alert('✅ Đã lưu cấu hình thanh toán & ngân hàng thành công vào Cloudflare D1!');
+      alert('✅ Đã lưu cấu hình tài khoản ngân hàng & thanh toán thành công vào Cloudflare D1!');
+      isPaymentFormInitialized = false;
       loadDashboardData();
     } else {
       alert('Lỗi: ' + (data.error || 'Không thể lưu cài đặt'));
@@ -728,6 +745,8 @@ async function handleSavePaymentSettings(e) {
   } catch (err) {
     console.error(err);
     alert('Lỗi kết nối khi lưu cài đặt');
+  } finally {
+    saveBtns.forEach(b => { b.innerText = '💾 Lưu Cấu Hình Thanh Toán'; b.disabled = false; });
   }
 }
 
