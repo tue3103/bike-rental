@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tra Cứu Tình Trạng Thuê Xe | SmileX Bike Rental Pleiku</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --card-bg: #0f172a;
+      --primary: #10b981;
+      --primary-glow: rgba(16, 185, 129, 0.25);
+      --accent-gold: #f59e0b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-card: rgba(255, 255, 255, 0.1);
+      --font-heading: 'Outfit', sans-serif;
+      --font-sans: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 14px 60px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 580px;
+    }
+
+    .header-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .brand-logo {
+      font-family: var(--font-heading);
+      font-size: 20px;
+      font-weight: 900;
+      color: #fff;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-logo span {
+      color: var(--primary);
+    }
+
+    .btn-back {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border-card);
+    }
+
+    .search-box {
+      background: var(--card-bg);
+      border: 1px solid var(--border-card);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+      margin-bottom: 24px;
+    }
+
+    .search-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .search-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .search-input-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .search-input {
+      flex: 1;
+      background: #090d16;
+      border: 1px solid var(--border-card);
+      padding: 12px 16px;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 15px;
+      outline: none;
+      font-family: var(--font-sans);
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+    }
+
+    .btn-search {
+      background: var(--primary);
+      color: #064e3b;
+      font-weight: 800;
+      border: none;
+      padding: 0 20px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      box-shadow: 0 4px 15px var(--primary-glow);
+    }
+
+    /* STATUS CARD */
+    .status-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-card);
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-top {
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .badge-pending {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--accent-gold);
+      border: 1px solid var(--accent-gold);
+    }
+
+    .badge-rented {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+
+    .badge-completed {
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+      border: 1px solid #60a5fa;
+    }
+
+    .card-body {
+      padding: 24px;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .detail-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .detail-val {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .bike-info-bar {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .finance-box {
+      background: rgba(16, 185, 129, 0.05);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      border-radius: 16px;
+      padding: 16px 18px;
+      margin-bottom: 20px;
+    }
+
+    .finance-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      margin-bottom: 8px;
+      color: var(--text-muted);
+    }
+
+    .finance-row.total {
+      border-top: 1px dashed rgba(255, 255, 255, 0.15);
+      padding-top: 10px;
+      margin-top: 10px;
+      margin-bottom: 0;
+    }
+
+    .help-box {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- NAV -->
+    <div class="header-nav">
+      <a href="/" class="brand-logo">🚴 SmileX <span>Bike</span></a>
+      <a href="/" class="btn-back">← Về Trang Chủ</a>
+    </div>
+
+    <!-- SEARCH BOX -->
+    <div class="search-box">
+      <div class="search-title">🔍 Tra Cứu Tình Trạng Thuê Xe</div>
+      <div class="search-desc">Nhập Số Điện Thoại hoặc Mã Đơn (ORD-...) của bạn để xem tiến độ giao xe và tiền cọc:</div>
+      <form class="search-input-group" onsubmit="handleSearch(event)">
+        <input type="text" id="searchInput" class="search-input" placeholder="Ví dụ: 0988... hoặc ORD-..." required>
+        <button type="submit" class="btn-search">Tra Cứu</button>
+      </form>
+    </div>
+
+    <!-- RESULT STATUS CARD -->
+    <div class="status-card" id="resultCard">
+      <div class="card-top" id="cardTop">
+        <div>
+          <div style="font-size:11px; color:var(--text-muted); font-weight:700;">MÃ ĐƠN HÀNG:</div>
+          <div style="font-size:16px; font-weight:800; color:#fff;" id="orderIdText">ORD-123</div>
+        </div>
+        <div class="badge-status" id="orderStatusBadge">🟢 Đang Thuê Xe</div>
+      </div>
+
+      <div class="card-body">
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-label">👤 Khách Hàng:</span>
+            <span class="detail-val" id="orderCustomer">-</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">📞 Số Điện Thoại:</span>
+            <span class="detail-val" id="orderPhone" style="color:var(--primary);">-</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">📅 Ngày Nhận:</span>
+            <span class="detail-val" id="orderStartDate">-</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">⏱️ Thời Hạn Thuê:</span>
+            <span class="detail-val" id="orderDays">-</span>
+          </div>
+          <div class="detail-item" style="grid-column: 1 / -1;">
+            <span class="detail-label">📍 Nơi Giao / Nhận:</span>
+            <span class="detail-val" id="orderLocation">-</span>
+          </div>
+        </div>
+
+        <div class="bike-info-bar">
+          <div style="font-size:24px;">🚲</div>
+          <div>
+            <div style="font-size:15px; font-weight:800; color:#fff;" id="orderBikeName">-</div>
+            <div style="font-size:12px; color:var(--primary);" id="orderBikeDetail">-</div>
+          </div>
+        </div>
+
+        <!-- FINANCE & DEPOSIT REFUND -->
+        <div class="finance-box">
+          <div class="finance-row">
+            <span>🛡️ Tiền Cọc Xe Đang Giữ:</span>
+            <b style="color:var(--accent-gold); font-size:15px;" id="orderDeposit">5.000.000 đ</b>
+          </div>
+          <div class="finance-row">
+            <span>🚴 Chi Phí Thuê & Giao Xe:</span>
+            <b style="color:#fff;" id="orderRentalCost">- 150.000 đ</b>
+          </div>
+          <div class="finance-row total">
+            <div>
+              <div style="font-size:14px; font-weight:800; color:#fff;">💵 Số Tiền Nhận Lại Khi Trả Xe:</div>
+              <div style="font-size:10px; color:var(--text-muted);">(Hoàn trả ngay 100% khi nhận lại xe)</div>
+            </div>
+            <b style="font-size:20px; font-weight:900; color:var(--primary);" id="orderRefund">4.850.000 đ</b>
+          </div>
+        </div>
+
+        <div style="text-align:center; margin-top:14px;">
+          <a href="/#booking" class="btn-back" style="display:inline-flex; justify-content:center; padding:10px 20px; color:#fff; font-weight:700;">
+            💬 Cần Hỗ Trợ? Nhắn Lễ Tân 24/7
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div id="noResultMsg" style="display:none; text-align:center; padding:30px; background:var(--card-bg); border-radius:18px; border:1px solid var(--border-card);">
+      <div style="font-size:32px; margin-bottom:8px;">🔍</div>
+      <div style="font-size:16px; font-weight:700; color:#fff;">Không tìm thấy đơn thuê phù hợp</div>
+      <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">Vui lòng kiểm tra lại số điện thoại hoặc mã đơn đã đặt.</div>
+    </div>
+
+    <div class="help-box">
+      📍 <b>SmileX Bike Rental Pleiku:</b> 197 Nguyễn Tất Thành, TP. Pleiku • Hỗ trợ 24/7
+    </div>
+  </div>
+
+  <script>
+    let allOrders = [];
+
+    async function loadOrders() {
+      try {
+        const res = await fetch('/api/inventory?action=get');
+        const data = await res.json();
+        if (data.success && data.orders) {
+          allOrders = data.orders;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+
+      // Check URL query param
+      const urlParams = new URLSearchParams(window.location.search);
+      const q = urlParams.get('phone') || urlParams.get('id') || urlParams.get('q');
+      if (q) {
+        document.getElementById('searchInput').value = q;
+        searchOrder(q);
+      }
+    }
+
+    function handleSearch(e) {
+      e.preventDefault();
+      const q = document.getElementById('searchInput').value.trim();
+      if (q) searchOrder(q);
+    }
+
+    function searchOrder(query) {
+      const q = query.toLowerCase().replace(/\s+/g, '');
+      const card = document.getElementById('resultCard');
+      const noResult = document.getElementById('noResultMsg');
+
+      const found = allOrders.find(o => {
+        const idMatch = String(o.id || '').toLowerCase().includes(q);
+        const phoneMatch = String(o.phone || '').replace(/\s+/g, '').includes(q);
+        return idMatch || phoneMatch;
+      });
+
+      if (!found) {
+        card.style.display = 'none';
+        noResult.style.display = 'block';
+        return;
+      }
+
+      noResult.style.display = 'none';
+      card.style.display = 'block';
+
+      const days = found.days || 1;
+      const bikes = found.bikes || 1;
+      const deposit = found.deposit || (bikes * 5000000);
+      const rate = days > 7 ? 30000 : 50000;
+      const isDelivery = (found.deliveryMethod || '').includes('Hotel') || (found.hotelAddress && found.hotelAddress.length > 5);
+      const deliveryFee = isDelivery ? 100000 : 0;
+      const rentalCost = (days * rate * bikes) + deliveryFee;
+      const refund = Math.max(0, deposit - rentalCost);
+
+      document.getElementById('orderIdText').innerText = found.id;
+      document.getElementById('orderCustomer').innerText = found.customer || 'Quý khách';
+      document.getElementById('orderPhone').innerText = found.phone || '-';
+      document.getElementById('orderStartDate').innerText = found.startDate || new Date().toLocaleDateString('vi-VN');
+      document.getElementById('orderDays').innerText = `${days} ngày`;
+      document.getElementById('orderLocation').innerText = found.hotelAddress || found.deliveryAddress || '197 Nguyễn Tất Thành, TP. Pleiku';
+      document.getElementById('orderBikeName').innerText = found.bikeName || found.bikeType || 'Xe đạp thể thao';
+      document.getElementById('orderBikeDetail').innerText = `Mã xe: ${found.bikeId || 'BK-02'} • Số lượng: ${bikes} xe`;
+
+      document.getElementById('orderDeposit').innerText = `${deposit.toLocaleString()} đ`;
+      document.getElementById('orderRentalCost').innerText = `- ${rentalCost.toLocaleString()} đ`;
+      document.getElementById('orderRefund').innerText = `${refund.toLocaleString()} đ`;
+
+      const badge = document.getElementById('orderStatusBadge');
+      if (found.status === 'Pending') {
+        badge.className = 'badge-status badge-pending';
+        badge.innerText = '⏳ Đang Chờ Lễ Tân Duyệt';
+      } else if (found.status === 'Rented') {
+        badge.className = 'badge-status badge-rented';
+        badge.innerText = '🟢 Đang Thuê Xe';
+      } else if (found.status === 'Completed') {
+        badge.className = 'badge-status badge-completed';
+        badge.innerText = '✅ Đã Trả Xe & Hoàn Cọc';
+      } else {
+        badge.className = 'badge-status';
+        badge.innerText = found.status || 'Đang xử lý';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadOrders);
+  </script>
+</body>
+</html>

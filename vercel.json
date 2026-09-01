@@ -3,7 +3,7 @@
   "trailingSlash": false,
   "rewrites": [
     { "source": "/quanly", "destination": "/quanly.html" },
-    { "source": "/phieu", "destination": "/phieu.html" }
+    { "source": "/tracuu", "destination": "/tracuu.html" }
   ],
   "redirects": [
     { "source": "/admin", "destination": "/", "permanent": true }

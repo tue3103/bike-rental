@@ -562,11 +562,11 @@ function renderOrders(orders) {
           <td>${statusBadge}</td>
           <td>
             <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
-              <a href="/phieu.html?id=${o.id}" target="_blank" class="btn btn-secondary" style="padding:4px 8px; font-size:11px; text-decoration:none;" title="Xem & In Phiếu Giao Xe Điện Tử">
-                📱 Phiếu
+              <a href="/tracuu?id=${o.id}" target="_blank" class="btn btn-secondary" style="padding:4px 8px; font-size:11px; text-decoration:none;" title="Xem Tình Trạng Đơn Thuê Xe">
+                🔍 Tra Cứu
               </a>
-              <button type="button" class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="copyOrderSlipLink('${o.id}')" title="Sao chép link phiếu gửi khách">
-                🔗 Copy
+              <button type="button" class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="copyOrderSlipLink('${o.id}')" title="Sao chép link tra cứu gửi khách">
+                🔗 Copy Link
               </button>
               ${isRented ? `
                 <button class="btn btn-success" style="padding:4px 8px; font-size:11px;" onclick="completeOrder('${o.id}')">
@@ -582,9 +582,9 @@ function renderOrders(orders) {
 }
 
 function copyOrderSlipLink(orderId) {
-  const url = `${window.location.origin}/phieu.html?id=${orderId}`;
+  const url = `${window.location.origin}/tracuu?id=${orderId}`;
   navigator.clipboard.writeText(url);
-  alert(`✅ Đã sao chép link Phiếu Giao Xe Điện Tử cho đơn ${orderId}!\nLink: ${url}\nBạn có thể dán gửi cho khách qua Zalo/WhatsApp.`);
+  alert(`✅ Đã sao chép link Tra Cứu Tình Trạng Thuê Xe cho đơn ${orderId}!\nLink: ${url}\nBạn có thể dán gửi cho khách qua Zalo/WhatsApp.`);
 }
 
 function filterOrdersTable() {
