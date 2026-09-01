@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phiếu Giao Xe & Biên Nhận Cọc Điện Tử | SmileX Bike Rental</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --card-bg: #0f172a;
+      --primary: #10b981;
+      --primary-glow: rgba(16, 185, 129, 0.25);
+      --accent-gold: #f59e0b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-card: rgba(255, 255, 255, 0.1);
+      --font-heading: 'Outfit', sans-serif;
+      --font-sans: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 14px;
+    }
+
+    .ticket-container {
+      width: 100%;
+      max-width: 540px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-card);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      position: relative;
+    }
+
+    .ticket-header {
+      background: linear-gradient(135deg, #064e3b 0%, #0f172a 100%);
+      padding: 24px 24px 20px;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+      position: relative;
+    }
+
+    .brand-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .brand-logo {
+      font-family: var(--font-heading);
+      font-size: 22px;
+      font-weight: 900;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-logo span {
+      color: var(--primary);
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 800;
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+
+    .ticket-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+      margin-top: 4px;
+    }
+
+    .ticket-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .ticket-body {
+      padding: 24px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .info-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .info-val {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .info-val.highlight {
+      color: var(--primary);
+    }
+
+    .bike-banner {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .bike-icon {
+      font-size: 32px;
+      background: rgba(16, 185, 129, 0.15);
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .finance-breakdown {
+      background: rgba(16, 185, 129, 0.05);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      border-radius: 16px;
+      padding: 16px 18px;
+      margin-bottom: 20px;
+    }
+
+    .finance-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      margin-bottom: 8px;
+      color: var(--text-muted);
+    }
+
+    .finance-row.total {
+      border-top: 1px dashed rgba(255, 255, 255, 0.15);
+      padding-top: 10px;
+      margin-top: 10px;
+      margin-bottom: 0;
+    }
+
+    .inclusions-box {
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 20px;
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .store-address {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 16px;
+    }
+
+    .actions-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      width: 100%;
+      max-width: 540px;
+    }
+
+    .btn-action {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: none;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-action.primary {
+      background: var(--primary);
+      color: #064e3b;
+      box-shadow: 0 4px 20px var(--primary-glow);
+    }
+
+    .btn-action.secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      border: 1px solid var(--border-card);
+    }
+
+    .btn-action:hover {
+      transform: translateY(-2px);
+    }
+
+    @media print {
+      body {
+        background: #fff;
+        color: #000;
+        padding: 0;
+      }
+      .actions-row {
+        display: none;
+      }
+      .ticket-container {
+        border: 1px solid #ccc;
+        box-shadow: none;
+        max-width: 100%;
+      }
+      .ticket-header {
+        background: #f1f5f9;
+        color: #000;
+      }
+      .ticket-title, .brand-logo, .info-val {
+        color: #000 !important;
+      }
+      .badge-status {
+        border: 1px solid #000;
+        color: #000;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ticket-container" id="ticketContent">
+    <!-- TICKET HEADER -->
+    <div class="ticket-header">
+      <div class="brand-row">
+        <div class="brand-logo">🚴 SmileX <span>Bike</span></div>
+        <div class="badge-status" id="ticketStatusBadge">✅ ĐÃ XÁC NHẬN CỌC</div>
+      </div>
+      <div class="ticket-title">PHIẾU BÀN GIAO XE & BIÊN NHẬN CỌC</div>
+      <div class="ticket-subtitle">Mã Phiếu Điện Tử: <b id="ticketIdDisplay" style="color:#fff;">ORD-LOADING</b></div>
+    </div>
+
+    <!-- TICKET BODY -->
+    <div class="ticket-body">
+      <!-- CUSTOMER & TIME INFO -->
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">👤 Khách Hàng:</span>
+          <span class="info-val" id="ticketCustomer">Đang tải...</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">📞 Số Điện Thoại:</span>
+          <span class="info-val highlight" id="ticketPhone">Đang tải...</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">📅 Ngày Nhận Xe:</span>
+          <span class="info-val" id="ticketStartDate">Hôm nay</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">⏱️ Thời Hạn Thuê:</span>
+          <span class="info-val" id="ticketDuration">1 ngày</span>
+        </div>
+        <div class="info-item" style="grid-column: 1 / -1;">
+          <span class="info-label">📍 Địa Điểm Bàn Giao:</span>
+          <span class="info-val" id="ticketLocation">197 Nguyễn Tất Thành, TP. Pleiku</span>
+        </div>
+      </div>
+
+      <!-- BIKE BANNER -->
+      <div class="bike-banner">
+        <div class="bike-icon">🚲</div>
+        <div>
+          <div style="font-size:11px; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Chiếc Xe Bàn Giao:</div>
+          <div style="font-size:16px; font-weight:800; color:#fff;" id="ticketBikeName">Trek Marlin 5 Highland</div>
+          <div style="font-size:12px; color:var(--primary); margin-top:2px;" id="ticketBikeDetail">Mã xe: BK-02 • 1 Xe</div>
+        </div>
+      </div>
+
+      <!-- FINANCE & DEPOSIT BREAKDOWN -->
+      <div class="finance-breakdown">
+        <div class="finance-row">
+          <span>🛡️ Tiền Cọc Xe SmileX Đã Nhận:</span>
+          <b style="color:var(--accent-gold); font-size:15px;" id="ticketDeposit">5.000.000 đ</b>
+        </div>
+        <div class="finance-row">
+          <span>🚴 Chi Phí Thuê Xe (<span id="ticketDaysDetail">1 ngày</span>):</span>
+          <b style="color:#fff;" id="ticketRentalCost">- 50.000 đ</b>
+        </div>
+        <div class="finance-row">
+          <span>🚚 Phí Giao & Thu Hồi Xe Tận Nơi:</span>
+          <b style="color:var(--accent-gold);" id="ticketDeliveryCost">- 100.000 đ</b>
+        </div>
+        <div class="finance-row total">
+          <div>
+            <div style="font-size:14px; font-weight:800; color:#fff;">💵 Số Tiền Nhận Lại Khi Trả Xe:</div>
+            <div style="font-size:10px; color:var(--text-muted);">(Hoàn trả 100% ngay sau khi kiểm tra xe)</div>
+          </div>
+          <b style="font-size:20px; font-weight:900; color:var(--primary);" id="ticketRefundAmount">4.850.000 đ</b>
+        </div>
+      </div>
+
+      <!-- INCLUSIONS & RULES -->
+      <div class="inclusions-box">
+        <b style="color:#fff; display:block; margin-bottom:4px;">🎁 Phụ kiện & Cam kết bàn giao:</b>
+        • Xe đã kiểm tra lốp, phanh dầu an toàn 100% trước khi giao.<br>
+        • Miễn phí 01 Mũ bảo hiểm + 01 Khóa số chống trộm + 01 Giá đỡ ĐT.<br>
+        • Quý khách giữ gìn xe nguyên vẹn, SmileX hoàn trả tiền cọc ngay khi nhận lại xe.
+      </div>
+
+      <div class="store-address">
+        <b>SMILEX BIKE RENTAL PLEIKU</b><br>
+        📍 197 Nguyễn Tất Thành, TP. Pleiku, Gia Lai • 💬 Hỗ trợ 24/7
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTION BUTTONS -->
+  <div class="actions-row">
+    <button class="btn-action primary" onclick="copySlipLink()">
+      <span>🔗</span> Sao Chép Link Phiếu
+    </button>
+    <button class="btn-action secondary" onclick="window.print()">
+      <span>🖨️</span> In / Lưu PDF
+    </button>
+  </div>
+
+  <script>
+    async function loadTicketData() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const orderId = urlParams.get('id') || 'DEMO';
+
+      try {
+        const res = await fetch('/api/inventory?action=get');
+        const data = await res.json();
+        
+        let order = null;
+        if (data.success && data.orders) {
+          order = data.orders.find(o => o.id === orderId || o.id === parseInt(orderId, 10));
+        }
+
+        if (!order) {
+          // Render sensible fallback for demo
+          document.getElementById('ticketIdDisplay').innerText = orderId;
+          document.getElementById('ticketCustomer').innerText = 'Quý Khách Hàng';
+          document.getElementById('ticketPhone').innerText = '0773.486.199';
+          document.getElementById('ticketStartDate').innerText = new Date().toLocaleDateString('vi-VN');
+          document.getElementById('ticketDuration').innerText = '1 ngày';
+          document.getElementById('ticketLocation').innerText = '197 Nguyễn Tất Thành, TP. Pleiku';
+          document.getElementById('ticketBikeName').innerText = 'Trek Marlin 5 Highland';
+          document.getElementById('ticketBikeDetail').innerText = 'Mã xe: BK-02 • 1 Xe';
+          document.getElementById('ticketDeposit').innerText = '5.000.000 đ';
+          document.getElementById('ticketRentalCost').innerText = '- 50.000 đ';
+          document.getElementById('ticketDeliveryCost').innerText = '0 đ (Nhận tại shop)';
+          document.getElementById('ticketRefundAmount').innerText = '4.950.000 đ';
+          return;
+        }
+
+        const days = order.days || 1;
+        const bikes = order.bikes || 1;
+        const deposit = order.deposit || (bikes * 5000000);
+        const rate = days > 7 ? 30000 : 50000;
+        const bikeCost = days * rate * bikes;
+        const isDelivery = (order.deliveryMethod || '').includes('Hotel') || (order.hotelAddress && order.hotelAddress.length > 5);
+        const deliveryFee = isDelivery ? 100000 : 0;
+        const refund = Math.max(0, deposit - (bikeCost + deliveryFee));
+
+        document.getElementById('ticketIdDisplay').innerText = order.id;
+        document.getElementById('ticketCustomer').innerText = order.customer || 'Quý Khách';
+        document.getElementById('ticketPhone').innerText = order.phone || '-';
+        document.getElementById('ticketStartDate').innerText = order.startDate || new Date().toLocaleDateString('vi-VN');
+        document.getElementById('ticketDuration').innerText = `${days} ngày`;
+        document.getElementById('ticketLocation').innerText = order.hotelAddress || order.deliveryMethod || '197 Nguyễn Tất Thành, TP. Pleiku';
+        document.getElementById('ticketBikeName').innerText = order.bikeName || order.bikeType || 'Xe đạp thể thao';
+        document.getElementById('ticketBikeDetail').innerText = `Mã xe: ${order.bikeId || 'BK-02'} • Số lượng: ${bikes} xe`;
+        
+        document.getElementById('ticketDeposit').innerText = `${deposit.toLocaleString()} đ`;
+        document.getElementById('ticketDaysDetail').innerText = `${days} ngày x ${rate.toLocaleString()}đ`;
+        document.getElementById('ticketRentalCost').innerText = `- ${bikeCost.toLocaleString()} đ`;
+        document.getElementById('ticketDeliveryCost').innerText = isDelivery ? `- ${deliveryFee.toLocaleString()} đ (Khứ hồi)` : '0 đ (Nhận tại shop)';
+        document.getElementById('ticketRefundAmount').innerText = `${refund.toLocaleString()} đ`;
+
+        const badge = document.getElementById('ticketStatusBadge');
+        if (order.status === 'Completed') {
+          badge.innerText = '✅ ĐÃ TRẢ XE & HOÀN CỌC';
+          badge.style.borderColor = 'var(--primary)';
+        } else if (order.status === 'Cancelled') {
+          badge.innerText = '❌ ĐƠN ĐÃ HỦY';
+          badge.style.borderColor = '#ef4444';
+          badge.style.color = '#ef4444';
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function copySlipLink() {
+      navigator.clipboard.writeText(window.location.href);
+      alert('✅ Đã sao chép link Phiếu Giao Xe Điện Tử! Bạn có thể dán gửi cho khách qua Zalo/WhatsApp.');
+    }
+
+    document.addEventListener('DOMContentLoaded', loadTicketData);
+  </script>
+</body>
+</html>

@@ -534,8 +534,10 @@ function renderOrders(orders) {
             ? `<span class="badge badge-success">🟢 Đã trả xe</span>` 
             : (isCancelled ? `<span class="badge badge-secondary">⚪ Đã hủy</span>` : `<span class="badge badge-warning">${o.status}</span>`));
 
+      const slipUrl = `${window.location.origin}/phieu.html?id=${o.id}`;
+
       return `
-        <tr>
+        <tr class="order-row" data-search="${(o.customer || '') + ' ' + (o.phone || '') + ' ' + (o.id || '') + ' ' + (o.bikeId || '')}" data-status="${o.status}">
           <td>
             <b style="font-family:monospace;">${o.id}</b>
             <div style="font-size:11px; color:var(--text-muted);">${o.createdAt || ''}</div>
@@ -555,20 +557,54 @@ function renderOrders(orders) {
             <b style="color:var(--accent-gold);">${(o.deposit || 0).toLocaleString()} đ</b>
           </td>
           <td>
-            <div style="font-size:12px;">${o.deliveryAddress || 'Tại shop'}</div>
+            <div style="font-size:12px;">${o.deliveryAddress || o.hotelAddress || 'Tại shop'}</div>
           </td>
           <td>${statusBadge}</td>
           <td>
-            ${isRented ? `
-              <button class="btn btn-success" style="padding:4px 8px; font-size:11px;" onclick="completeOrder('${o.id}')">
-                🔄 Trả Xe & Hoàn Cọc
+            <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+              <a href="/phieu.html?id=${o.id}" target="_blank" class="btn btn-secondary" style="padding:4px 8px; font-size:11px; text-decoration:none;" title="Xem & In Phiếu Giao Xe Điện Tử">
+                📱 Phiếu
+              </a>
+              <button type="button" class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="copyOrderSlipLink('${o.id}')" title="Sao chép link phiếu gửi khách">
+                🔗 Copy
               </button>
-            ` : `<span style="font-size:11px; color:var(--text-muted);">-</span>`}
+              ${isRented ? `
+                <button class="btn btn-success" style="padding:4px 8px; font-size:11px;" onclick="completeOrder('${o.id}')">
+                  🔄 Trả Xe
+                </button>
+              ` : ''}
+            </div>
           </td>
         </tr>
       `;
     }).join('');
   }
+}
+
+function copyOrderSlipLink(orderId) {
+  const url = `${window.location.origin}/phieu.html?id=${orderId}`;
+  navigator.clipboard.writeText(url);
+  alert(`✅ Đã sao chép link Phiếu Giao Xe Điện Tử cho đơn ${orderId}!\nLink: ${url}\nBạn có thể dán gửi cho khách qua Zalo/WhatsApp.`);
+}
+
+function filterOrdersTable() {
+  const query = (document.getElementById('orderSearchInput')?.value || '').toLowerCase().trim();
+  const statusFilter = document.getElementById('orderStatusFilter')?.value || 'ALL';
+
+  const rows = document.querySelectorAll('.order-row');
+  rows.forEach(r => {
+    const searchData = (r.getAttribute('data-search') || '').toLowerCase();
+    const status = r.getAttribute('data-status') || '';
+
+    const matchQuery = !query || searchData.includes(query);
+    const matchStatus = statusFilter === 'ALL' || status === statusFilter;
+
+    if (matchQuery && matchStatus) {
+      r.style.display = '';
+    } else {
+      r.style.display = 'none';
+    }
+  });
 }
 
 async function approveOrder(orderId) {
